@@ -311,11 +311,13 @@ const Text = React.createClass({
         style: [this.props.style, {color: 'magenta'}],
       };
     }
-    if (this.context.isInAParentText) {
-      return <RCTVirtualText {...newProps} />;
-    } else {
-      return <RCTText {...newProps} />;
-    }
+    // if (this.context.isInAParentText) {
+    //   return <RCTVirtualText {...newProps} />;
+    // } else {
+    //   return <RCTText {...newProps} />;
+    // }
+    const { children, ...props } = newProps;
+    return <RCTText {...props}>{children}</RCTText>;
   },
 });
 
