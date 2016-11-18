@@ -14,7 +14,9 @@
 
 #ifdef _MSC_VER
 #include <float.h>
+#ifndef isnan
 #define isnan _isnan
+#endif
 
 #ifndef __cplusplus
 #define inline __inline
@@ -180,7 +182,7 @@ static inline float computedEdgeValue(const float edges[CSSEdgeCount],
   return defaultValue;
 }
 
-static int32_t gNodeInstanceCount = 0;
+int32_t gNodeInstanceCount = 0;
 
 CSSNodeRef CSSNodeNew(void) {
   const CSSNodeRef node = gCSSCalloc(1, sizeof(CSSNode));
@@ -341,7 +343,14 @@ bool CSSNodeIsDirty(const CSSNodeRef node) {
   return node->isDirty;
 }
 
-inline float CSSNodeStyleGetFlexGrow(CSSNodeRef node) {
+void CSSNodeCopyStyle(const CSSNodeRef dstNode, const CSSNodeRef srcNode) {
+  if (memcmp(&dstNode->style, &srcNode->style, sizeof(CSSStyle)) != 0) {
+    memcpy(&dstNode->style, &srcNode->style, sizeof(CSSStyle));
+    _CSSNodeMarkDirty(dstNode);
+  }
+}
+
+inline float CSSNodeStyleGetFlexGrow(const CSSNodeRef node) {
   if (!CSSValueIsUndefined(node->style.flexGrow)) {
     return node->style.flexGrow;
   }
@@ -351,7 +360,7 @@ inline float CSSNodeStyleGetFlexGrow(CSSNodeRef node) {
   return 0;
 }
 
-inline float CSSNodeStyleGetFlexShrink(CSSNodeRef node) {
+inline float CSSNodeStyleGetFlexShrink(const CSSNodeRef node) {
   if (!CSSValueIsUndefined(node->style.flexShrink)) {
     return node->style.flexShrink;
   }
@@ -361,7 +370,7 @@ inline float CSSNodeStyleGetFlexShrink(CSSNodeRef node) {
   return 0;
 }
 
-inline float CSSNodeStyleGetFlexBasis(CSSNodeRef node) {
+inline float CSSNodeStyleGetFlexBasis(const CSSNodeRef node) {
   if (!CSSValueIsUndefined(node->style.flexBasis)) {
     return node->style.flexBasis;
   }
@@ -1803,7 +1812,7 @@ static void layoutNodeImpl(const CSSNodeRef node,
     if (measureModeMainDim == CSSMeasureModeAtMost && remainingFreeSpace > 0) {
       if (!CSSValueIsUndefined(node->style.minDimensions[dim[mainAxis]]) &&
           node->style.minDimensions[dim[mainAxis]] >= 0) {
-        remainingFreeSpace = fmax(0,
+        remainingFreeSpace = fmaxf(0,
                                   node->style.minDimensions[dim[mainAxis]] -
                                       (availableInnerMainDim - remainingFreeSpace));
       } else {
@@ -2166,7 +2175,7 @@ bool gPrintSkips = false;
 static const char *spacer = "                                                            ";
 
 static const char *getSpacer(const unsigned long level) {
-  const unsigned long spacerLen = strlen(spacer);
+  const size_t spacerLen = strlen(spacer);
   if (level > spacerLen) {
     return &spacer[0];
   } else {
@@ -2519,7 +2528,7 @@ void CSSLog(CSSLogLevel level, const char *format, ...) {
   va_end(args);
 }
 
-static bool experimentalFeatures[CSSExperimentalFeatureCount];
+static bool experimentalFeatures[CSSExperimentalFeatureCount + 1];
 
 void CSSLayoutSetExperimentalFeatureEnabled(CSSExperimentalFeature feature, bool enabled) {
   experimentalFeatures[feature] = enabled;
