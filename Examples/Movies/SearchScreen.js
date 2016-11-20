@@ -41,8 +41,8 @@ var SearchBar = require('SearchBar');
  */
 var API_URL = 'http://api.rottentomatoes.com/api/public/v1.0/';
 var API_KEYS = [
-  '7waqfqbprs7pajbz28mqf6vz',
-  // 'y4vwv8m33hed9ety83jmv52f', Fallback api_key
+  //'7waqfqbprs7pajbz28mqf6vz',
+  'y4vwv8m33hed9ety83jmv52f', // Fallback api_key
 ];
 
 // Results should be cached keyed by the query
@@ -119,35 +119,110 @@ var SearchScreen = React.createClass({
       queryNumber: this.state.queryNumber + 1,
       isLoadingTail: false,
     });
+    this.setState({
+      isLoading: false,
+      dataSource: this.getDataSource([
+        {
+            "title": "Jack and Jill",
+            "year": 2011,
+            "runtime": "",
+            "release_dates": {"theater": "2011-11-11"},
+            "ratings": {
+              "critics_score": -1,
+              "audience_score": 90
+            },
+            "synopsis": "",
+            "posters": {
+              "thumbnail": "http://content8.flixster.com/movie/11/16/39/11163966_tmb.jpg",
+              "profile": "http://content8.flixster.com/movie/11/16/39/11163966_tmb.jpg",
+              "detailed": "http://content8.flixster.com/movie/11/16/39/11163966_tmb.jpg",
+              "original": "http://content8.flixster.com/movie/11/16/39/11163966_tmb.jpg"
 
-    fetch(this._urlForQueryAndPage(query, 1))
-      .then((response) => response.json())
-      .catch((error) => {
-        LOADING[query] = false;
-        resultsCache.dataForQuery[query] = undefined;
+            },
+            "abridged_cast": [
+              {
+                "name": "Al Pacino",
+                "characters": []
+              },
+              {
+                "name": "Adam Sandler",
+                "characters": []
+              },
+              {
+                "name": "Katie Holmes",
+                "characters": []
+              }
+            ],
+            "links": {
+              "self": "http://api.rottentomatoes.com/api/public/v1.0/movies/771205893.json",
+              "alternate": "http://www.rottentomatoes.com/m/jack_and_jill_2011/"
 
-        this.setState({
-          dataSource: this.getDataSource([]),
-          isLoading: false,
-        });
-      })
-      .then((responseData) => {
-        LOADING[query] = false;
-        resultsCache.totalForQuery[query] = responseData.total;
-        resultsCache.dataForQuery[query] = responseData.movies;
-        resultsCache.nextPageNumberForQuery[query] = 2;
-
-        if (this.state.filter !== query) {
-          // do not update state if the query is stale
-          return;
-        }
-
-        this.setState({
-          isLoading: false,
-          dataSource: this.getDataSource(responseData.movies),
-        });
-      })
-      .done();
+            }
+          },
+          {
+    "id": "770739679",
+    "title": "Captain America: The First Avenger",
+    "year": 2011,
+    "mpaa_rating": "PG-13",
+    "runtime": 121,
+    "critics_consensus": "With plenty of pulpy action, a pleasantly retro vibe, and a handful of fine performances, Captain America is solidly old-fashioned blockbuster entertainment.",
+    "release_dates": {"theater": "2011-07-22"},
+    "ratings": {
+      "critics_rating": "Fresh",
+      "critics_score": 71,
+      "audience_score": 96
+    },
+    "synopsis": "Captain America: The First Avenger will focus on the early days of the Marvel Universe when Steve Rogers (Chris Evans) volunteers to participate in an experimental program that turns him into the Super Soldier known as Captain America. As Captain America, Rogers joins forces with Bucky Barnes (Sebastian Stan) and Peggy Carter (Hayley Atwell) to wage war on the evil HYDRA organization, led by the villainous Red Skull (Hugo Weaving.) -- (C) Paramount",
+    "posters": {
+      "thumbnail": "http://content9.flixster.com/movie/11/15/83/11158339_tmb.jpg",
+      "profile": "http://content9.flixster.com/movie/11/15/83/11158339_tmb.jpg",
+      "detailed": "http://content9.flixster.com/movie/11/15/83/11158339_tmb.jpg",
+      "original": "http://content9.flixster.com/movie/11/15/83/11158339_tmb.jpg"
+    },
+    "abridged_cast": [
+      {
+        "name": "Chris Evans",
+        "characters": [
+          "Captain America/Steve Rogers",
+          "Steve Rogers / Captain America",
+          "Steve Rogers/Captain America"
+        ]
+      },
+      {
+        "name": "Hayley Atwell",
+        "characters": ["Peggy Carter"]
+      },
+      {
+        "name": "Sebastian Stan",
+        "characters": [
+          "Bucky Barnes",
+          "James Buchanan \"Bucky\" Barnes"
+        ]
+      },
+      {
+        "name": "Tommy Lee Jones",
+        "characters": ["Colonel Chester Phillips"]
+      },
+      {
+        "name": "Hugo Weaving",
+        "characters": [
+          "Johann Schmidt/Red Skull",
+          "Johann Schmidt/The Red Skull",
+          "Red Skull"
+        ]
+      }
+    ],
+    "links": {
+      "self": "http://api.rottentomatoes.com/api/public/v1.0/movies/770739679.json",
+      "alternate": "http://www.rottentomatoes.com/m/captain-america/",
+      "cast": "http://api.rottentomatoes.com/api/public/v1.0/movies/770739679/cast.json",
+      "clips": "http://api.rottentomatoes.com/api/public/v1.0/movies/770739679/clips.json",
+      "reviews": "http://api.rottentomatoes.com/api/public/v1.0/movies/770739679/reviews.json",
+      "similar": "http://api.rottentomatoes.com/api/public/v1.0/movies/770739679/similar.json"
+    }
+  }
+      ]),
+    });
   },
 
   hasMore: function(): boolean {
