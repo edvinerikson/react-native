@@ -741,6 +741,21 @@ RCT_EXPORT_METHOD(removeSubviewsFromContainerWithID:(nonnull NSNumber *)containe
        removeAtIndices:indices];
 }
 
+RCT_EXPORT_METHOD(removeChildren:(nonnull NSNumber *)containerID atIndices:(NSArray<NSNumber *> *)reactTags)
+{
+  id<RCTComponent> container = _shadowViewRegistry[containerID];
+  for (NSNumber *tag in reactTags) {
+    id<RCTComponent> child = _shadowViewRegistry[tag];
+    if ([[container reactSubviews] containsObject:child]) {
+      [container removeReactSubview:child];
+    }
+    
+  }
+  
+  
+  
+}
+
 /**
  * Disassociates children from container. Doesn't remove from registries.
  * TODO: use [NSArray getObjects:buffer] to reuse same fast buffer each time.
