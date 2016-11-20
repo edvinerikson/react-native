@@ -19,11 +19,8 @@
  * handling the case when there is exactly one item (and we do not need to
  * allocate an array).
  */
-function forEachAccumulated<T>(
-  arr: ?(T | Array<T>),
-  cb: ((elem: T) => void),
-  scope: ?any,
-) {
+
+function forEachAccumulated<T>(arr: ?T | Array<T>, cb: (elem: T) => void, scope: ?any) {
   if (Array.isArray(arr)) {
     arr.forEach(cb, scope);
   } else if (arr) {

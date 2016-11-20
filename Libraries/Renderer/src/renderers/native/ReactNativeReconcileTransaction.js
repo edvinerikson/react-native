@@ -25,16 +25,16 @@ var ON_DOM_READY_QUEUEING = {
   /**
    * Initializes the internal `onDOMReady` queue.
    */
-  initialize: function() {
+  initialize: function () {
     this.reactMountReady.reset();
   },
 
   /**
    * After DOM is flushed, invoke all registered `onDOMReady` callbacks.
    */
-  close: function() {
+  close: function () {
     this.reactMountReady.notifyAll();
-  },
+  }
 };
 
 /**
@@ -47,7 +47,7 @@ var TRANSACTION_WRAPPERS = [ON_DOM_READY_QUEUEING];
 if (__DEV__) {
   TRANSACTION_WRAPPERS.push({
     initialize: ReactInstrumentation.debugTool.onBeginFlush,
-    close: ReactInstrumentation.debugTool.onEndFlush,
+    close: ReactInstrumentation.debugTool.onEndFlush
   });
 }
 
@@ -78,7 +78,7 @@ var Mixin = {
    * @return {array<object>} List of operation wrap procedures.
    *   TODO: convert to array<TransactionWrapper>
    */
-  getTransactionWrappers: function() {
+  getTransactionWrappers: function () {
     return TRANSACTION_WRAPPERS;
   },
 
@@ -86,14 +86,14 @@ var Mixin = {
    * @return {object} The queue to collect `onDOMReady` callbacks with.
    *   TODO: convert to ReactMountReady
    */
-  getReactMountReady: function() {
+  getReactMountReady: function () {
     return this.reactMountReady;
   },
 
   /**
    * @return {object} The queue to collect React async events.
    */
-  getUpdateQueue: function() {
+  getUpdateQueue: function () {
     return ReactUpdateQueue;
   },
 
@@ -101,12 +101,12 @@ var Mixin = {
    * Save current transaction state -- if the return value from this method is
    * passed to `rollback`, the transaction will be reset to that state.
    */
-  checkpoint: function() {
+  checkpoint: function () {
     // reactMountReady is the our only stateful wrapper
     return this.reactMountReady.checkpoint();
   },
 
-  rollback: function(checkpoint) {
+  rollback: function (checkpoint) {
     this.reactMountReady.rollback(checkpoint);
   },
 
@@ -114,18 +114,13 @@ var Mixin = {
    * `PooledClass` looks for this, and will invoke this before allowing this
    * instance to be reused.
    */
-  destructor: function() {
+  destructor: function () {
     CallbackQueue.release(this.reactMountReady);
     this.reactMountReady = null;
-  },
+  }
 };
 
-Object.assign(
-  ReactNativeReconcileTransaction.prototype,
-  Transaction,
-  ReactNativeReconcileTransaction,
-  Mixin
-);
+Object.assign(ReactNativeReconcileTransaction.prototype, Transaction, ReactNativeReconcileTransaction, Mixin);
 
 PooledClass.addPoolingTo(ReactNativeReconcileTransaction);
 

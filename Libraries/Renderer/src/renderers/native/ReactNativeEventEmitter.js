@@ -16,7 +16,7 @@ var EventPluginRegistry = require('EventPluginRegistry');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
-var ReactUpdates = require('ReactUpdates');
+var ReactGenericBatching = require('ReactGenericBatching');
 
 var warning = require('fbjs/lib/warning');
 
@@ -35,7 +35,7 @@ var EMPTY_NATIVE_EVENT = {};
  * @param {Array<number>} indices Indices by which to pull subsequence.
  * @return {Array<Touch>} Subsequence of touch objects.
  */
-var touchSubsequence = function(touches, indices) {
+var touchSubsequence = function (touches, indices) {
   var ret = [];
   for (var i = 0; i < indices.length; i++) {
     ret.push(touches[indices[i]]);
@@ -54,10 +54,7 @@ var touchSubsequence = function(touches, indices) {
  * @param {Array<number>} indices Indices to remove from `touches`.
  * @return {Array<Touch>} Subsequence of removed touch objects.
  */
-var removeTouchesAtIndices = function(
-  touches: Array<Object>,
-  indices: Array<number>
-): Array<Object> {
+var removeTouchesAtIndices = function (touches: Array<Object>, indices: Array<number>): Array<Object> {
   var rippedOut = [];
   // use an unsafe downcast to alias to nullable elements,
   // so we can delete and then compact.
@@ -78,28 +75,13 @@ var removeTouchesAtIndices = function(
   return rippedOut;
 };
 
-/**
- * `ReactNativeEventEmitter` is used to attach top-level event listeners. For example:
- *
- *   ReactNativeEventEmitter.putListener('myID', 'onClick', myFunction);
- *
- * This would allocate a "registration" of `('onClick', myFunction)` on 'myID'.
- *
- * @internal
- */
 var ReactNativeEventEmitter = {
 
   ...ReactEventEmitterMixin,
 
   registrationNames: EventPluginRegistry.registrationNameModules,
 
-  putListener: EventPluginHub.putListener,
-
   getListener: EventPluginHub.getListener,
-
-  deleteListener: EventPluginHub.deleteListener,
-
-  deleteAllListeners: EventPluginHub.deleteAllListeners,
 
   /**
    * Internal version of `receiveEvent` in terms of normalized (non-tag)
@@ -111,11 +93,7 @@ var ReactNativeEventEmitter = {
    * @param {TopLevelType} topLevelType Top level type of event.
    * @param {object} nativeEventParam Object passed from native.
    */
-  _receiveRootNodeIDEvent: function(
-    rootNodeID: number,
-    topLevelType: string,
-    nativeEventParam: Object
-  ) {
+  _receiveRootNodeIDEvent: function (rootNodeID: number, topLevelType: string, nativeEventParam: Object) {
     var nativeEvent = nativeEventParam || EMPTY_NATIVE_EVENT;
     var inst = ReactNativeComponentTree.getInstanceFromNode(rootNodeID);
     if (!inst) {
@@ -123,14 +101,11 @@ var ReactNativeEventEmitter = {
       // any events.
       return;
     }
-    ReactUpdates.batchedUpdates(function() {
-      ReactNativeEventEmitter.handleTopLevel(
-        topLevelType,
-        inst,
-        nativeEvent,
-        nativeEvent.target
-      );
+    ReactGenericBatching.batchedUpdates(function () {
+      ReactNativeEventEmitter.handleTopLevel(topLevelType, inst, nativeEvent, nativeEvent.target);
     });
+    // React Native doesn't use ReactControlledComponent but if it did, here's
+    // where it would do it.
   },
 
   /**
@@ -140,17 +115,9 @@ var ReactNativeEventEmitter = {
    * @param {TopLevelType} topLevelType Top level type of event.
    * @param {object} nativeEventParam Object passed from native.
    */
-  receiveEvent: function(
-    tag: number,
-    topLevelType: string,
-    nativeEventParam: Object
-  ) {
+  receiveEvent: function (tag: number, topLevelType: string, nativeEventParam: Object) {
     var rootNodeID = tag;
-    ReactNativeEventEmitter._receiveRootNodeIDEvent(
-      rootNodeID,
-      topLevelType,
-      nativeEventParam
-    );
+    ReactNativeEventEmitter._receiveRootNodeIDEvent(rootNodeID, topLevelType, nativeEventParam);
   },
 
   /**
@@ -177,16 +144,8 @@ var ReactNativeEventEmitter = {
    * Web desktop polyfills only need to construct a fake touch event with
    * identifier 0, also abandoning traditional click handlers.
    */
-  receiveTouches: function(
-    eventTopLevelType: string,
-    touches: Array<Object>,
-    changedIndices: Array<number>
-  ) {
-    var changedTouches =
-      eventTopLevelType === 'topTouchEnd' ||
-      eventTopLevelType === 'topTouchCancel' ?
-      removeTouchesAtIndices(touches, changedIndices) :
-      touchSubsequence(touches, changedIndices);
+  receiveTouches: function (eventTopLevelType: string, touches: Array<Object>, changedIndices: Array<number>) {
+    var changedTouches = eventTopLevelType === 'topTouchEnd' || eventTopLevelType === 'topTouchCancel' ? removeTouchesAtIndices(touches, changedIndices) : touchSubsequence(touches, changedIndices);
 
     for (var jj = 0; jj < changedTouches.length; jj++) {
       var touch = changedTouches[jj];
@@ -200,22 +159,15 @@ var ReactNativeEventEmitter = {
       if (target !== null && target !== undefined) {
         if (target < ReactNativeTagHandles.tagsStartAt) {
           if (__DEV__) {
-            warning(
-              false,
-              'A view is reporting that a touch occured on tag zero.'
-            );
+            warning(false, 'A view is reporting that a touch occured on tag zero.');
           }
         } else {
           rootNodeID = target;
         }
       }
-      ReactNativeEventEmitter._receiveRootNodeIDEvent(
-        rootNodeID,
-        eventTopLevelType,
-        nativeEvent
-      );
+      ReactNativeEventEmitter._receiveRootNodeIDEvent(rootNodeID, eventTopLevelType, nativeEvent);
     }
-  },
+  }
 };
 
 module.exports = ReactNativeEventEmitter;

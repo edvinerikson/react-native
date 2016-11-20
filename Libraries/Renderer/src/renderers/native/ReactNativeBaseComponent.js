@@ -14,22 +14,16 @@
 var NativeMethodsMixin = require('NativeMethodsMixin');
 var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
-var ReactNativeEventEmitter = require('ReactNativeEventEmitter');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var ReactMultiChild = require('ReactMultiChild');
 var UIManager = require('UIManager');
 
 var deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationInDev');
 
-var registrationNames = ReactNativeEventEmitter.registrationNames;
-var putListener = ReactNativeEventEmitter.putListener;
-var deleteListener = ReactNativeEventEmitter.deleteListener;
-var deleteAllListeners = ReactNativeEventEmitter.deleteAllListeners;
-
 type ReactNativeBaseComponentViewConfig = {
   validAttributes: Object;
   uiViewClassName: string;
-}
+};
 
 // require('UIManagerStatTracker').install(); // uncomment to enable
 
@@ -39,9 +33,7 @@ type ReactNativeBaseComponentViewConfig = {
  * @extends ReactMultiChild
  * @param {!object} UIKit View Configuration.
  */
-var ReactNativeBaseComponent = function(
-  viewConfig: ReactNativeBaseComponentViewConfig
-) {
+var ReactNativeBaseComponent = function (viewConfig: ReactNativeBaseComponentViewConfig) {
   this.viewConfig = viewConfig;
 };
 
@@ -50,15 +42,14 @@ var ReactNativeBaseComponent = function(
  * which is a `viewID` ... see the return value for `mountComponent` !
  */
 ReactNativeBaseComponent.Mixin = {
-  getPublicInstance: function() {
+  getPublicInstance: function () {
     // TODO: This should probably use a composite wrapper
     return this;
   },
 
-  unmountComponent: function() {
+  unmountComponent: function (safely, skipLifecycle) {
     ReactNativeComponentTree.uncacheNode(this);
-    deleteAllListeners(this);
-    this.unmountChildren();
+    this.unmountChildren(safely, skipLifecycle);
     this._rootNodeID = 0;
   },
 
@@ -70,7 +61,7 @@ ReactNativeBaseComponent.Mixin = {
    * a child of a container can confidently record that in
    * `ReactNativeTagHandles`.
    */
-  initializeChildren: function(children, containerTag, transaction, context) {
+  initializeChildren: function (children, containerTag, transaction, context) {
     var mountImages = this.mountChildren(children, transaction, context);
     // In a well balanced tree, half of the nodes are in the bottom row and have
     // no children - let's avoid calling out to the native bridge for a large
@@ -97,7 +88,7 @@ ReactNativeBaseComponent.Mixin = {
    * @param {object} context
    * @internal
    */
-  receiveComponent: function(nextElement, transaction, context) {
+  receiveComponent: function (nextElement, transaction, context) {
     var prevElement = this._currentElement;
     this._currentElement = nextElement;
 
@@ -109,56 +100,13 @@ ReactNativeBaseComponent.Mixin = {
       }
     }
 
-    var updatePayload = ReactNativeAttributePayload.diff(
-      prevElement.props,
-      nextElement.props,
-      this.viewConfig.validAttributes
-    );
+    var updatePayload = ReactNativeAttributePayload.diff(prevElement.props, nextElement.props, this.viewConfig.validAttributes);
 
     if (updatePayload) {
-      UIManager.updateView(
-        this._rootNodeID,
-        this.viewConfig.uiViewClassName,
-        updatePayload
-      );
+      UIManager.updateView(this._rootNodeID, this.viewConfig.uiViewClassName, updatePayload);
     }
 
-    this._reconcileListenersUponUpdate(
-      prevElement.props,
-      nextElement.props
-    );
     this.updateChildren(nextElement.props.children, transaction, context);
-  },
-
-  /**
-   * @param {object} initialProps Native component props.
-   */
-  _registerListenersUponCreation: function(initialProps) {
-    for (var key in initialProps) {
-      // NOTE: The check for `!props[key]`, is only possible because this method
-      // registers listeners the *first* time a component is created.
-      if (registrationNames[key] && initialProps[key]) {
-        var listener = initialProps[key];
-        putListener(this, key, listener);
-      }
-    }
-  },
-
-  /**
-   * Reconciles event listeners, adding or removing if necessary.
-   * @param {object} prevProps Native component props including events.
-   * @param {object} nextProps Next native component props including events.
-   */
-  _reconcileListenersUponUpdate: function(prevProps, nextProps) {
-    for (var key in nextProps) {
-      if (registrationNames[key] && (nextProps[key] !== prevProps[key])) {
-        if (nextProps[key]) {
-          putListener(this, key, nextProps[key]);
-        } else {
-          deleteListener(this, key);
-        }
-      }
-    }
   },
 
   /**
@@ -166,7 +114,7 @@ ReactNativeBaseComponent.Mixin = {
    *
    * @return {null} Null.
    */
-  getHostNode: function() {
+  getHostNode: function () {
     return this._rootNodeID;
   },
 
@@ -177,7 +125,7 @@ ReactNativeBaseComponent.Mixin = {
    * @param {object} context
    * @return {string} Unique iOS view tag.
    */
-  mountComponent: function(transaction, hostParent, hostContainerInfo, context) {
+  mountComponent: function (transaction, hostParent, hostContainerInfo, context) {
     var tag = ReactNativeTagHandles.allocateTag();
 
     this._rootNodeID = tag;
@@ -192,41 +140,22 @@ ReactNativeBaseComponent.Mixin = {
       }
     }
 
-    var updatePayload = ReactNativeAttributePayload.create(
-      this._currentElement.props,
-      this.viewConfig.validAttributes
-    );
+    var updatePayload = ReactNativeAttributePayload.create(this._currentElement.props, this.viewConfig.validAttributes);
 
     var nativeTopRootTag = hostContainerInfo._tag;
-    UIManager.createView(
-      tag,
-      this.viewConfig.uiViewClassName,
-      nativeTopRootTag,
-      updatePayload
-    );
+    UIManager.createView(tag, this.viewConfig.uiViewClassName, nativeTopRootTag, updatePayload);
 
     ReactNativeComponentTree.precacheNode(this, tag);
 
-    this._registerListenersUponCreation(this._currentElement.props);
-    this.initializeChildren(
-      this._currentElement.props.children,
-      tag,
-      transaction,
-      context
-    );
+    this.initializeChildren(this._currentElement.props.children, tag, transaction, context);
     return tag;
-  },
+  }
 };
 
 /**
  * Order of mixins is important. ReactNativeBaseComponent overrides methods in
  * ReactMultiChild.
  */
-Object.assign(
-  ReactNativeBaseComponent.prototype,
-  ReactMultiChild,
-  ReactNativeBaseComponent.Mixin,
-  NativeMethodsMixin
-);
+Object.assign(ReactNativeBaseComponent.prototype, ReactMultiChild, ReactNativeBaseComponent.Mixin, NativeMethodsMixin);
 
 module.exports = ReactNativeBaseComponent;

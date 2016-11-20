@@ -18,18 +18,16 @@
  * @param {string} key to be escaped.
  * @return {string} the escaped key.
  */
+
 function escape(key: string): string {
   var escapeRegex = /[=:]/g;
   var escaperLookup = {
     '=': '=0',
-    ':': '=2',
+    ':': '=2'
   };
-  var escapedString = ('' + key).replace(
-    escapeRegex,
-    function(match) {
-      return escaperLookup[match];
-    }
-  );
+  var escapedString = ('' + key).replace(escapeRegex, function (match) {
+    return escaperLookup[match];
+  });
 
   return '$' + escapedString;
 }
@@ -44,22 +42,18 @@ function unescape(key: string): string {
   var unescapeRegex = /(=0|=2)/g;
   var unescaperLookup = {
     '=0': '=',
-    '=2': ':',
+    '=2': ':'
   };
-  var keySubstring = (key[0] === '.' && key[1] === '$')
-    ? key.substring(2) : key.substring(1);
+  var keySubstring = key[0] === '.' && key[1] === '$' ? key.substring(2) : key.substring(1);
 
-  return ('' + keySubstring).replace(
-    unescapeRegex,
-    function(match) {
-      return unescaperLookup[match];
-    }
-  );
+  return ('' + keySubstring).replace(unescapeRegex, function (match) {
+    return unescaperLookup[match];
+  });
 }
 
 var KeyEscapeUtils = {
   escape: escape,
-  unescape: unescape,
+  unescape: unescape
 };
 
 module.exports = KeyEscapeUtils;

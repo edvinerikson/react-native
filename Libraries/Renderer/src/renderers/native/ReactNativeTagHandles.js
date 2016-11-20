@@ -31,7 +31,7 @@ var ReactNativeTagHandles = {
   tagsStartAt: INITIAL_TAG_COUNT,
   tagCount: INITIAL_TAG_COUNT,
 
-  allocateTag: function(): number {
+  allocateTag: function (): number {
     // Skip over root IDs as those are reserved for native
     while (this.reactTagIsNativeTopRootID(ReactNativeTagHandles.tagCount)) {
       ReactNativeTagHandles.tagCount++;
@@ -41,17 +41,14 @@ var ReactNativeTagHandles = {
     return tag;
   },
 
-  assertRootTag: function(tag: number): void {
-    invariant(
-      this.reactTagIsNativeTopRootID(tag),
-      'Expect a native root tag, instead got %s', tag
-    );
+  assertRootTag: function (tag: number): void {
+    invariant(this.reactTagIsNativeTopRootID(tag), 'Expect a native root tag, instead got %s', tag);
   },
 
-  reactTagIsNativeTopRootID: function(reactTag: number): boolean {
+  reactTagIsNativeTopRootID: function (reactTag: number): bool {
     // We reserve all tags that are 1 mod 10 for native root views
     return reactTag % 10 === 1;
-  },
+  }
 };
 
 module.exports = ReactNativeTagHandles;

@@ -25,29 +25,16 @@ var warning = require('fbjs/lib/warning');
  * @param {function} fn The function to forward on to
  * @return {function} The function that will warn once and then call fn
  */
-function deprecated<T: Function>(
-  fnName: string,
-  newModule: string,
-  newPackage: string,
-  ctx: mixed,
-  fn: T,
-): T {
+function deprecated<T>(fnName: string, newModule: string, newPackage: string, ctx: mixed, fn: T): T {
   var warned = false;
   if (__DEV__) {
-    var newFn = function() {
-      warning(
-        warned,
-        /* eslint-disable no-useless-concat */
-        // Require examples in this string must be split to prevent React's
-        // build tools from mistaking them for real requires.
-        // Otherwise the build tools will attempt to build a '%s' module.
-        'React.%s is deprecated. Please use %s.%s from require' + '(\'%s\') ' +
-        'instead.',
-        fnName,
-        newModule,
-        fnName,
-        newPackage
-      );
+    var newFn = function () {
+      warning(warned,
+      /* eslint-disable no-useless-concat */
+      // Require examples in this string must be split to prevent React's
+      // build tools from mistaking them for real requires.
+      // Otherwise the build tools will attempt to build a '%s' module.
+      'React.%s is deprecated. Please use %s.%s from require' + '(\'%s\') ' + 'instead.', fnName, newModule, fnName, newPackage);
       /* eslint-enable no-useless-concat */
       warned = true;
       return fn.apply(ctx, arguments);

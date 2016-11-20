@@ -7,11 +7,15 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactNativeComponentTree
+ * @flow
  */
 
 'use strict';
 
+import type { Fiber } from 'ReactFiber';
+
 var invariant = require('fbjs/lib/invariant');
+var { useFiber } = require('ReactNativeFeatureFlags');
 
 var instanceCache = {};
 
@@ -24,7 +28,7 @@ var instanceCache = {};
  */
 function getRenderedHostOrTextFromComponent(component) {
   var rendered;
-  while ((rendered = component._renderedComponent)) {
+  while (rendered = component._renderedComponent) {
     component = rendered;
   }
   return component;
@@ -34,23 +38,32 @@ function getRenderedHostOrTextFromComponent(component) {
  * Populate `_hostNode` on the rendered host/text component with the given
  * DOM node. The passed `inst` can be a composite.
  */
-function precacheNode(inst, tag) {
+function precacheNode(inst: Object, tag: number) {
   var nativeInst = getRenderedHostOrTextFromComponent(inst);
   instanceCache[tag] = nativeInst;
 }
 
-function uncacheNode(inst) {
+function precacheFiberNode(inst: Object, tag: number) {
+  instanceCache[tag] = inst;
+}
+
+function uncacheNode(inst: Object) {
   var tag = inst._rootNodeID;
   if (tag) {
     delete instanceCache[tag];
   }
 }
 
-function getInstanceFromTag(tag) {
+function getInstanceFromTag(tag: number) {
   return instanceCache[tag] || null;
 }
 
-function getTagFromInstance(inst) {
+function getTagFromFiber(fiber: Fiber) {
+  invariant(fiber.stateNode, 'All native instances should have a tag.');
+  return fiber.stateNode._rootNodeID;
+}
+
+function getTagFromInstance(inst: Object) {
   invariant(inst._rootNodeID, 'All native instances should have a tag.');
   return inst._rootNodeID;
 }
@@ -58,9 +71,10 @@ function getTagFromInstance(inst) {
 var ReactNativeComponentTree = {
   getClosestInstanceFromNode: getInstanceFromTag,
   getInstanceFromNode: getInstanceFromTag,
-  getNodeFromInstance: getTagFromInstance,
+  getNodeFromInstance: useFiber ? getTagFromFiber : getTagFromInstance,
   precacheNode: precacheNode,
   uncacheNode: uncacheNode,
+  precacheFiberNode: precacheFiberNode
 };
 
 module.exports = ReactNativeComponentTree;

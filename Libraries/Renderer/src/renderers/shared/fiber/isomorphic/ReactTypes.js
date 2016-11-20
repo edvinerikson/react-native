@@ -22,4 +22,4 @@ export type ReactNodeList = ReactEmpty | ReactNode;
 
 export type ReactText = string | number;
 
-export type ReactEmpty = null | void | boolean;
+export type ReactEmpty = null | void | bool;

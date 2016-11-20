@@ -61,12 +61,7 @@ function getComponentKey(component, index) {
  * process.
  * @return {!number} The number of children in this subtree.
  */
-function traverseAllChildrenImpl(
-  children,
-  nameSoFar,
-  callback,
-  traverseContext
-) {
+function traverseAllChildrenImpl(children, nameSoFar, callback, traverseContext) {
   var type = typeof children;
 
   if (type === 'undefined' || type === 'boolean') {
@@ -74,19 +69,14 @@ function traverseAllChildrenImpl(
     children = null;
   }
 
-  if (children === null ||
-      type === 'string' ||
-      type === 'number' ||
-      // The following is inlined from ReactElement. This means we can optimize
-      // some checks. React Fiber also inlines this logic for similar purposes.
-      (type === 'object' && children.$$typeof === REACT_ELEMENT_TYPE)) {
-    callback(
-      traverseContext,
-      children,
-      // If it's the only child, treat the name as if it was wrapped in an array
-      // so that it's consistent if the number of children grows.
-      nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar
-    );
+  if (children === null || type === 'string' || type === 'number' ||
+  // The following is inlined from ReactElement. This means we can optimize
+  // some checks. React Fiber also inlines this logic for similar purposes.
+  type === 'object' && children.$$typeof === REACT_ELEMENT_TYPE) {
+    callback(traverseContext, children,
+    // If it's the only child, treat the name as if it was wrapped in an array
+    // so that it's consistent if the number of children grows.
+    nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar);
     return 1;
   }
 
@@ -99,12 +89,7 @@ function traverseAllChildrenImpl(
     for (var i = 0; i < children.length; i++) {
       child = children[i];
       nextName = nextNamePrefix + getComponentKey(child, i);
-      subtreeCount += traverseAllChildrenImpl(
-        child,
-        nextName,
-        callback,
-        traverseContext
-      );
+      subtreeCount += traverseAllChildrenImpl(child, nextName, callback, traverseContext);
     }
   } else {
     var iteratorFn = getIteratorFn(children);
@@ -116,12 +101,7 @@ function traverseAllChildrenImpl(
         while (!(step = iterator.next()).done) {
           child = step.value;
           nextName = nextNamePrefix + getComponentKey(child, ii++);
-          subtreeCount += traverseAllChildrenImpl(
-            child,
-            nextName,
-            callback,
-            traverseContext
-          );
+          subtreeCount += traverseAllChildrenImpl(child, nextName, callback, traverseContext);
         }
       } else {
         if (__DEV__) {
@@ -132,13 +112,7 @@ function traverseAllChildrenImpl(
               mapsAsChildrenAddendum = ' Check the render method of `' + mapsAsChildrenOwnerName + '`.';
             }
           }
-          warning(
-            didWarnAboutMaps,
-            'Using Maps as children is not yet fully supported. It is an ' +
-            'experimental feature that might be removed. Convert it to a ' +
-            'sequence / iterable of keyed ReactElements instead.%s',
-            mapsAsChildrenAddendum
-          );
+          warning(didWarnAboutMaps, 'Using Maps as children is not yet fully supported. It is an ' + 'experimental feature that might be removed. Convert it to a ' + 'sequence / iterable of keyed ReactElements instead.%s', mapsAsChildrenAddendum);
           didWarnAboutMaps = true;
         }
         // Iterator will provide entry [k,v] tuples rather than values.
@@ -146,31 +120,17 @@ function traverseAllChildrenImpl(
           var entry = step.value;
           if (entry) {
             child = entry[1];
-            nextName = (
-              nextNamePrefix +
-              KeyEscapeUtils.escape(entry[0]) + SUBSEPARATOR +
-              getComponentKey(child, 0)
-            );
-            subtreeCount += traverseAllChildrenImpl(
-              child,
-              nextName,
-              callback,
-              traverseContext
-            );
+            nextName = nextNamePrefix + KeyEscapeUtils.escape(entry[0]) + SUBSEPARATOR + getComponentKey(child, 0);
+            subtreeCount += traverseAllChildrenImpl(child, nextName, callback, traverseContext);
           }
         }
       }
     } else if (type === 'object') {
       var addendum = '';
       if (__DEV__) {
-        addendum =
-          ' If you meant to render a collection of children, use an array ' +
-          'instead or wrap the object using createFragment(object) from the ' +
-          'React add-ons.';
+        addendum = ' If you meant to render a collection of children, use an array ' + 'instead or wrap the object using createFragment(object) from the ' + 'React add-ons.';
         if (children._isReactElement) {
-          addendum =
-            ' It looks like you\'re using an element created by a different ' +
-            'version of React. Make sure to use only one copy of React.';
+          addendum = ' It looks like you\'re using an element created by a different ' + 'version of React. Make sure to use only one copy of React.';
         }
         if (ReactCurrentOwner.current) {
           var name = ReactCurrentOwner.current.getName();
@@ -180,14 +140,7 @@ function traverseAllChildrenImpl(
         }
       }
       var childrenString = String(children);
-      invariant(
-        false,
-        'Objects are not valid as a React child (found: %s).%s',
-        childrenString === '[object Object]' ?
-          'object with keys {' + Object.keys(children).join(', ') + '}' :
-          childrenString,
-        addendum
-      );
+      invariant(false, 'Objects are not valid as a React child (found: %s).%s', childrenString === '[object Object]' ? 'object with keys {' + Object.keys(children).join(', ') + '}' : childrenString, addendum);
     }
   }
 

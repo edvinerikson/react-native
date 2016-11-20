@@ -14,7 +14,7 @@
 
 type ReactNodeType = 0 | 1 | 2;
 
-var React = require('React');
+var React = require('react/lib/React');
 
 var invariant = require('fbjs/lib/invariant');
 
@@ -23,7 +23,7 @@ var ReactNodeTypes = {
   COMPOSITE: 1,
   EMPTY: 2,
 
-  getType: function(node: ReactElement<any>): ReactNodeType {
+  getType: function (node: ReactElement<any>): ReactNodeType {
     if (node === null || node === false) {
       return ReactNodeTypes.EMPTY;
     } else if (React.isValidElement(node)) {
@@ -34,7 +34,7 @@ var ReactNodeTypes = {
       }
     }
     invariant(false, 'Unexpected node: %s', node);
-  },
+  }
 };
 
 module.exports = ReactNodeTypes;

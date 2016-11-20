@@ -15,20 +15,17 @@ var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactHostComponent = require('ReactHostComponent');
 
+var getNextDebugID = require('getNextDebugID');
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
 
 // To avoid a cyclic dependency, we create the final class in this module
-var ReactCompositeComponentWrapper = function(element) {
+var ReactCompositeComponentWrapper = function (element) {
   this.construct(element);
 };
-Object.assign(
-  ReactCompositeComponentWrapper.prototype,
-  ReactCompositeComponent,
-  {
-    _instantiateReactComponent: instantiateReactComponent,
-  }
-);
+Object.assign(ReactCompositeComponentWrapper.prototype, ReactCompositeComponent, {
+  _instantiateReactComponent: instantiateReactComponent
+});
 
 function getDeclarationErrorAddendum(owner) {
   if (owner) {
@@ -48,15 +45,8 @@ function getDeclarationErrorAddendum(owner) {
  * @return {boolean} Returns true if this is a valid internal type.
  */
 function isInternalComponentType(type) {
-  return (
-    typeof type === 'function' &&
-    typeof type.prototype !== 'undefined' &&
-    typeof type.prototype.mountComponent === 'function' &&
-    typeof type.prototype.receiveComponent === 'function'
-  );
+  return typeof type === 'function' && typeof type.prototype !== 'undefined' && typeof type.prototype.mountComponent === 'function' && typeof type.prototype.receiveComponent === 'function';
 }
-
-var nextDebugID = 1;
 
 /**
  * Given a ReactNode, create an instance that will actually be mounted.
@@ -73,14 +63,7 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
     instance = ReactEmptyComponent.create(instantiateReactComponent);
   } else if (typeof node === 'object') {
     var element = node;
-    invariant(
-      element && (typeof element.type === 'function' ||
-                  typeof element.type === 'string'),
-      'Element type is invalid: expected a string (for built-in components) ' +
-      'or a class/function (for composite components) but got: %s.%s',
-      element.type == null ? element.type : typeof element.type,
-      getDeclarationErrorAddendum(element._owner)
-    );
+    invariant(element && (typeof element.type === 'function' || typeof element.type === 'string'), 'Element type is invalid: expected a string (for built-in components) ' + 'or a class/function (for composite components) but got: %s.%s', element.type == null ? element.type : typeof element.type, getDeclarationErrorAddendum(element._owner));
 
     // Special case string values
     if (typeof element.type === 'string') {
@@ -101,21 +84,11 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
   } else if (typeof node === 'string' || typeof node === 'number') {
     instance = ReactHostComponent.createInstanceForText(node);
   } else {
-    invariant(
-      false,
-      'Encountered invalid React node of type %s',
-      typeof node
-    );
+    invariant(false, 'Encountered invalid React node of type %s', typeof node);
   }
 
   if (__DEV__) {
-    warning(
-      typeof instance.mountComponent === 'function' &&
-      typeof instance.receiveComponent === 'function' &&
-      typeof instance.getHostNode === 'function' &&
-      typeof instance.unmountComponent === 'function',
-      'Only React Components can be mounted.'
-    );
+    warning(typeof instance.mountComponent === 'function' && typeof instance.receiveComponent === 'function' && typeof instance.getHostNode === 'function' && typeof instance.unmountComponent === 'function', 'Only React Components can be mounted.');
   }
 
   // These two fields are used by the DOM and ART diffing algorithms
@@ -125,7 +98,7 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
   instance._mountImage = null;
 
   if (__DEV__) {
-    instance._debugID = shouldHaveDebugID ? nextDebugID++ : 0;
+    instance._debugID = shouldHaveDebugID ? getNextDebugID() : 0;
   }
 
   // Internal instances should fully constructed at this point, so they should

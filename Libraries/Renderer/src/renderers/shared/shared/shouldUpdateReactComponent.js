@@ -22,6 +22,7 @@
  * @return {boolean} True if the existing instance should be updated.
  * @protected
  */
+
 function shouldUpdateReactComponent(prevElement, nextElement) {
   var prevEmpty = prevElement === null || prevElement === false;
   var nextEmpty = nextElement === null || nextElement === false;
@@ -32,13 +33,9 @@ function shouldUpdateReactComponent(prevElement, nextElement) {
   var prevType = typeof prevElement;
   var nextType = typeof nextElement;
   if (prevType === 'string' || prevType === 'number') {
-    return (nextType === 'string' || nextType === 'number');
+    return nextType === 'string' || nextType === 'number';
   } else {
-    return (
-      nextType === 'object' &&
-      prevElement.type === nextElement.type &&
-      prevElement.key === nextElement.key
-    );
+    return nextType === 'object' && prevElement.type === nextElement.type && prevElement.key === nextElement.key;
   }
 }
 

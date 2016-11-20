@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactDebugTool
+ * @flow
  */
 
 'use strict';
@@ -25,39 +26,30 @@ import type { Operation } from 'ReactHostOperationHistoryHook';
 
 type Hook = any;
 
-type TimerType =
-  'ctor' |
-  'render' |
-  'componentWillMount' |
-  'componentWillUnmount' |
-  'componentWillReceiveProps' |
-  'shouldComponentUpdate' |
-  'componentWillUpdate' |
-  'componentDidUpdate' |
-  'componentDidMount';
+type TimerType = 'ctor' | 'render' | 'componentWillMount' | 'componentWillUnmount' | 'componentWillReceiveProps' | 'shouldComponentUpdate' | 'componentWillUpdate' | 'componentDidUpdate' | 'componentDidMount';
 
 type Measurement = {
-  timerType: TimerType,
-  instanceID: DebugID,
-  duration: number,
+  timerType: TimerType;
+  instanceID: DebugID;
+  duration: number;
 };
 
 type TreeSnapshot = {
   [key: DebugID]: {
-    displayName: string,
-    text: string,
-    updateCount: number,
-    childIDs: Array<DebugID>,
-    ownerID: DebugID,
-    parentID: DebugID,
+    displayName: string;
+    text: string;
+    updateCount: number;
+    childIDs: Array<DebugID>;
+    ownerID: DebugID;
+    parentID: DebugID;
   }
 };
 
 type HistoryItem = {
-  duration: number,
-  measurements: Array<Measurement>,
-  operations: Array<Operation>,
-  treeSnapshot: TreeSnapshot,
+  duration: number;
+  measurements: Array<Measurement>;
+  operations: Array<Operation>;
+  treeSnapshot: TreeSnapshot;
 };
 
 export type FlushHistory = Array<HistoryItem>;
@@ -69,12 +61,7 @@ function callHook(event, fn, context, arg1, arg2, arg3, arg4, arg5) {
   try {
     fn.call(context, arg1, arg2, arg3, arg4, arg5);
   } catch (e) {
-    warning(
-      didHookThrowForEvent[event],
-      'Exception thrown by hook while handling %s: %s',
-      event,
-      e + '\n' + e.stack
-    );
+    warning(didHookThrowForEvent[event], 'Exception thrown by hook while handling %s: %s', event, e + '\n' + e.stack);
     didHookThrowForEvent[event] = true;
   }
 }
@@ -117,10 +104,8 @@ function getTreeSnapshot(registeredIDs) {
       updateCount: ReactComponentTreeHook.getUpdateCount(id),
       childIDs: ReactComponentTreeHook.getChildIDs(id),
       // Text nodes don't have owners but this is close enough.
-      ownerID: ownerID ||
-        parentID && ReactComponentTreeHook.getOwnerID(parentID) ||
-        0,
-      parentID,
+      ownerID: ownerID || parentID && ReactComponentTreeHook.getOwnerID(parentID) || 0,
+      parentID
     };
     return tree;
   }, {});
@@ -144,7 +129,7 @@ function resetMeasurements() {
       duration: performanceNow() - previousStartTime,
       measurements: previousMeasurements || [],
       operations: previousOperations || [],
-      treeSnapshot: getTreeSnapshot(registeredIDs),
+      treeSnapshot: getTreeSnapshot(registeredIDs)
     });
   }
 
@@ -167,15 +152,7 @@ function beginLifeCycleTimer(debugID, timerType) {
     return;
   }
   if (currentTimerType && !lifeCycleTimerHasWarned) {
-    warning(
-      false,
-      'There is an internal error in the React performance measurement code. ' +
-      'Did not expect %s timer to start while %s timer is still in ' +
-      'progress for %s instance.',
-      timerType,
-      currentTimerType || 'no',
-      (debugID === currentTimerDebugID) ? 'the same' : 'another'
-    );
+    warning(false, 'There is an internal error in the React performance measurement code. ' + 'Did not expect %s timer to start while %s timer is still in ' + 'progress for %s instance.', timerType, currentTimerType || 'no', debugID === currentTimerDebugID ? 'the same' : 'another');
     lifeCycleTimerHasWarned = true;
   }
   currentTimerStartTime = performanceNow();
@@ -189,22 +166,14 @@ function endLifeCycleTimer(debugID, timerType) {
     return;
   }
   if (currentTimerType !== timerType && !lifeCycleTimerHasWarned) {
-    warning(
-      false,
-      'There is an internal error in the React performance measurement code. ' +
-      'We did not expect %s timer to stop while %s timer is still in ' +
-      'progress for %s instance. Please report this as a bug in React.',
-      timerType,
-      currentTimerType || 'no',
-      (debugID === currentTimerDebugID) ? 'the same' : 'another'
-    );
+    warning(false, 'There is an internal error in the React performance measurement code. ' + 'We did not expect %s timer to stop while %s timer is still in ' + 'progress for %s instance. Please report this as a bug in React.', timerType, currentTimerType || 'no', debugID === currentTimerDebugID ? 'the same' : 'another');
     lifeCycleTimerHasWarned = true;
   }
   if (isProfiling) {
     currentFlushMeasurements.push({
       timerType,
       instanceID: debugID,
-      duration: performanceNow() - currentTimerStartTime - currentTimerNestedFlushDuration,
+      duration: performanceNow() - currentTimerStartTime - currentTimerNestedFlushDuration
     });
   }
   currentTimerStartTime = 0;
@@ -218,7 +187,7 @@ function pauseCurrentLifeCycleTimer() {
     startTime: currentTimerStartTime,
     nestedFlushStartTime: performanceNow(),
     debugID: currentTimerDebugID,
-    timerType: currentTimerType,
+    timerType: currentTimerType
   };
   lifeCycleTimerStack.push(currentTimer);
   currentTimerStartTime = 0;
@@ -228,7 +197,7 @@ function pauseCurrentLifeCycleTimer() {
 }
 
 function resumeCurrentLifeCycleTimer() {
-  var {startTime, nestedFlushStartTime, debugID, timerType} = lifeCycleTimerStack.pop();
+  var { startTime, nestedFlushStartTime, debugID, timerType } = lifeCycleTimerStack.pop();
   var nestedFlushDuration = performanceNow() - nestedFlushStartTime;
   currentTimerStartTime = startTime;
   currentTimerNestedFlushDuration += nestedFlushDuration;
@@ -237,13 +206,7 @@ function resumeCurrentLifeCycleTimer() {
 }
 
 var lastMarkTimeStamp = 0;
-var canUsePerformanceMeasure: boolean =
-// $FlowFixMe https://github.com/facebook/flow/issues/2345
-  typeof performance !== 'undefined' &&
-  typeof performance.mark === 'function' &&
-  typeof performance.clearMarks === 'function' &&
-  typeof performance.measure === 'function' &&
-  typeof performance.clearMeasures === 'function';
+var canUsePerformanceMeasure: bool = typeof performance !== 'undefined' && typeof performance.mark === 'function' && typeof performance.clearMarks === 'function' && typeof performance.measure === 'function' && typeof performance.clearMeasures === 'function';
 
 function shouldMark(debugID) {
   if (!isProfiling || !canUsePerformanceMeasure) {
@@ -265,7 +228,7 @@ function markBegin(debugID, markType) {
     return;
   }
 
-  var markName = `${debugID}::${markType}`;
+  var markName = `${ debugID }::${ markType }`;
   lastMarkTimeStamp = performanceNow();
   performance.mark(markName);
 }
@@ -275,7 +238,7 @@ function markEnd(debugID, markType) {
     return;
   }
 
-  var markName = `${debugID}::${markType}`;
+  var markName = `${ debugID }::${ markType }`;
   var displayName = ReactComponentTreeHook.getDisplayName(debugID) || 'Unknown';
 
   // Chrome has an issue of dropping markers recorded too fast:
@@ -286,7 +249,7 @@ function markEnd(debugID, markType) {
   // When the bug is fixed, we can `measure()` unconditionally if we want to.
   var timeStamp = performanceNow();
   if (timeStamp - lastMarkTimeStamp > 0.1) {
-    var measurementName = `${displayName} [${markType}]`;
+    var measurementName = `${ displayName } [${ markType }]`;
     performance.measure(measurementName, markName);
   }
 
@@ -306,7 +269,7 @@ var ReactDebugTool = {
       }
     }
   },
-  isProfiling(): boolean {
+  isProfiling(): bool {
     return isProfiling;
   },
   beginProfiling(): void {
@@ -406,17 +369,13 @@ var ReactDebugTool = {
   },
   onTestEvent(): void {
     emitEvent('onTestEvent');
-  },
+  }
 };
-
-// TODO remove these when RN/www gets updated
-(ReactDebugTool: any).addDevtool = ReactDebugTool.addHook;
-(ReactDebugTool: any).removeDevtool = ReactDebugTool.removeHook;
 
 ReactDebugTool.addHook(ReactInvalidSetStateWarningHook);
 ReactDebugTool.addHook(ReactComponentTreeHook);
-var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
-if ((/[?&]react_perf\b/).test(url)) {
+var url = ExecutionEnvironment.canUseDOM && window.location.href || '';
+if (/[?&]react_perf\b/.test(url)) {
   ReactDebugTool.beginProfiling();
 }
 

@@ -25,7 +25,7 @@ var UIManager = require('UIManager');
  * @param {array<string>} markup List of markup strings - in the case of React
  * IOS, the ids of new components assumed to be already created.
  */
-var dangerouslyProcessChildrenUpdates = function(inst, childrenUpdates) {
+var dangerouslyProcessChildrenUpdates = function (inst, childrenUpdates) {
   if (!childrenUpdates.length) {
     return;
   }
@@ -53,14 +53,7 @@ var dangerouslyProcessChildrenUpdates = function(inst, childrenUpdates) {
     }
   }
 
-  UIManager.manageChildren(
-    containerTag,
-    moveFromIndices,
-    moveToIndices,
-    addChildTags,
-    addAtIndices,
-    removeAtIndices
-  );
+  UIManager.manageChildren(containerTag, moveFromIndices, moveToIndices, addChildTags, addAtIndices, removeAtIndices);
 };
 
 /**
@@ -76,10 +69,10 @@ var ReactNativeDOMIDOperations = {
    * @param {string} id ID of child to be replaced.
    * @param {string} markup Mount image to replace child with id.
    */
-  dangerouslyReplaceNodeWithMarkupByID: function(id, mountImage) {
+  dangerouslyReplaceNodeWithMarkupByID: function (id, mountImage) {
     var oldTag = id;
     UIManager.replaceExistingNonRootView(oldTag, mountImage);
-  },
+  }
 };
 
 module.exports = ReactNativeDOMIDOperations;

@@ -17,22 +17,23 @@ import type { Fiber } from 'ReactFiber';
 
 var { createFiberFromElementType } = require('ReactFiber');
 
-export type ReifiedYield = { continuation: Fiber, props: Object };
+export type ReifiedYield = { continuation: Fiber; props: Object; };
 
-exports.createReifiedYield = function(yieldNode : ReactYield) : ReifiedYield {
-  var fiber = createFiberFromElementType(
-    yieldNode.continuation,
-    yieldNode.key
-  );
+exports.createReifiedYield = function (yieldNode: ReactYield): ReifiedYield {
+  var fiber = createFiberFromElementType(yieldNode.continuation, yieldNode.key);
   return {
     continuation: fiber,
-    props: yieldNode.props,
+    props: yieldNode.props
   };
 };
 
-exports.createUpdatedReifiedYield = function(previousYield : ReifiedYield, yieldNode : ReactYield) : ReifiedYield {
+exports.createUpdatedReifiedYield = function (previousYield: ReifiedYield, yieldNode: ReactYield): ReifiedYield {
+  var fiber = previousYield.continuation;
+  if (fiber.type !== yieldNode.continuation) {
+    fiber = createFiberFromElementType(yieldNode.continuation, yieldNode.key);
+  }
   return {
-    continuation: previousYield.continuation,
-    props: yieldNode.props,
+    continuation: fiber,
+    props: yieldNode.props
   };
 };

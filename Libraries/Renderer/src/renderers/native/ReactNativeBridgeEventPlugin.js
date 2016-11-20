@@ -27,11 +27,7 @@ for (var bubblingTypeName in customBubblingEventTypes) {
 }
 
 for (var directTypeName in customDirectEventTypes) {
-  warning(
-    !customBubblingEventTypes[directTypeName],
-    'Event cannot be both direct and bubbling: %s',
-    directTypeName
-  );
+  warning(!customBubblingEventTypes[directTypeName], 'Event cannot be both direct and bubbling: %s', directTypeName);
   allTypesByEventName[directTypeName] = customDirectEventTypes[directTypeName];
 }
 
@@ -42,20 +38,10 @@ var ReactNativeBridgeEventPlugin = {
   /**
    * @see {EventPluginHub.extractEvents}
    */
-  extractEvents: function(
-    topLevelType: string,
-    targetInst: Object,
-    nativeEvent: Event,
-    nativeEventTarget: Object
-  ): ?Object {
+  extractEvents: function (topLevelType: string, targetInst: Object, nativeEvent: Event, nativeEventTarget: Object): ?Object {
     var bubbleDispatchConfig = customBubblingEventTypes[topLevelType];
     var directDispatchConfig = customDirectEventTypes[topLevelType];
-    var event = SyntheticEvent.getPooled(
-      bubbleDispatchConfig || directDispatchConfig,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget
-    );
+    var event = SyntheticEvent.getPooled(bubbleDispatchConfig || directDispatchConfig, targetInst, nativeEvent, nativeEventTarget);
     if (bubbleDispatchConfig) {
       EventPropagators.accumulateTwoPhaseDispatches(event);
     } else if (directDispatchConfig) {
@@ -64,7 +50,7 @@ var ReactNativeBridgeEventPlugin = {
       return null;
     }
     return event;
-  },
+  }
 };
 
 module.exports = ReactNativeBridgeEventPlugin;

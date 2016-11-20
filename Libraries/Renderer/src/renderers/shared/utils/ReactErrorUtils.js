@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactErrorUtils
+ * @flow
  */
 
 'use strict';
@@ -18,14 +19,9 @@ var caughtError = null;
  *
  * @param {String} name of the guard to use for logging or debugging
  * @param {Function} func The function to invoke
- * @param {*} a First argument
- * @param {*} b Second argument
+ * @param {*} a Argument
  */
-function invokeGuardedCallback<A>(
-  name: string,
-  func: (a: A) => void,
-  a: A,
-): void {
+function invokeGuardedCallback<A>(name: string, func: (a: A) => void, a: A): void {
   try {
     func(a);
   } catch (x) {
@@ -48,13 +44,13 @@ var ReactErrorUtils = {
    * During execution of guarded functions we will capture the first error which
    * we will rethrow to be handled by the top level error handler.
    */
-  rethrowCaughtError: function() {
+  rethrowCaughtError: function () {
     if (caughtError) {
       var error = caughtError;
       caughtError = null;
       throw error;
     }
-  },
+  }
 };
 
 if (__DEV__) {
@@ -62,21 +58,13 @@ if (__DEV__) {
    * To help development we can get better devtools integration by simulating a
    * real browser event.
    */
-  if (typeof window !== 'undefined' &&
-      typeof window.dispatchEvent === 'function' &&
-      typeof document !== 'undefined' &&
-      typeof document.createEvent === 'function') {
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof document !== 'undefined' && typeof document.createEvent === 'function') {
     var fakeNode = document.createElement('react');
-    ReactErrorUtils.invokeGuardedCallback = function<A>(
-      name: string,
-      func: (a: A) => void,
-      a: A,
-    ): void {
+    ReactErrorUtils.invokeGuardedCallback = function <A>(name: string, func: (a: A) => void, a: A): void {
       var boundFunc = func.bind(null, a);
-      var evtType = `react-${name}`;
+      var evtType = `react-${ name }`;
       fakeNode.addEventListener(evtType, boundFunc, false);
       var evt = document.createEvent('Event');
-      // $FlowFixMe https://github.com/facebook/flow/issues/2336
       evt.initEvent(evtType, false, false);
       fakeNode.dispatchEvent(evt);
       fakeNode.removeEventListener(evtType, boundFunc, false);

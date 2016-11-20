@@ -13,6 +13,7 @@
 'use strict';
 
 // Trust the developer to only use ReactInstrumentation with a __DEV__ check
+
 var debugTool = ((null: any): typeof ReactDebugTool);
 
 if (__DEV__) {
@@ -20,4 +21,4 @@ if (__DEV__) {
   debugTool = ReactDebugTool;
 }
 
-module.exports = {debugTool};
+module.exports = { debugTool };

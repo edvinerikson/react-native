@@ -13,72 +13,89 @@
 'use strict';
 
 type UpdateQueueNode = {
-  partialState: any,
-  callback: ?Function,
-  callbackWasCalled: boolean,
-  next: ?UpdateQueueNode,
+  partialState: any;
+  callback: ?Function;
+  isReplace: bool;
+  next: ?UpdateQueueNode;
 };
 
 export type UpdateQueue = UpdateQueueNode & {
-  isReplace: boolean,
-  isForced: boolean,
-  tail: UpdateQueueNode
+  isForced: bool;
+  hasUpdate: bool;
+  hasCallback: bool;
+  tail: UpdateQueueNode;
 };
 
-exports.createUpdateQueue = function(partialState : mixed) : UpdateQueue {
+exports.createUpdateQueue = function (partialState: mixed): UpdateQueue {
   const queue = {
     partialState,
     callback: null,
-    callbackWasCalled: false,
-    next: null,
     isReplace: false,
+    next: null,
     isForced: false,
-    tail: (null : any),
+    hasUpdate: partialState != null,
+    hasCallback: false,
+    tail: (null: any)
   };
   queue.tail = queue;
   return queue;
 };
 
-exports.addToQueue = function(queue : UpdateQueue, partialState : mixed) : UpdateQueue {
+function addToQueue(queue: UpdateQueue, partialState: mixed): UpdateQueue {
   const node = {
     partialState,
     callback: null,
-    callbackWasCalled: false,
-    next: null,
+    isReplace: false,
+    next: null
   };
   queue.tail.next = node;
   queue.tail = node;
+  queue.hasUpdate = queue.hasUpdate || partialState != null;
   return queue;
-};
+}
 
-exports.addCallbackToQueue = function(queue : UpdateQueue, callback: Function) : UpdateQueue {
+exports.addToQueue = addToQueue;
+
+exports.addCallbackToQueue = function (queue: UpdateQueue, callback: Function): UpdateQueue {
   if (queue.tail.callback) {
     // If the tail already as a callback, add an empty node to queue
-    exports.addToQueue(queue, null);
+    addToQueue(queue, null);
   }
   queue.tail.callback = callback;
+  queue.hasCallback = true;
   return queue;
 };
 
-exports.callCallbacks = function(queue : UpdateQueue, context : any) {
-  let node : ?UpdateQueueNode = queue;
+exports.callCallbacks = function (queue: UpdateQueue, context: any): Error | null {
+  let node: ?UpdateQueueNode = queue;
+  let firstError = null;
   while (node) {
-    if (node.callback && !node.callbackWasCalled) {
-      node.callbackWasCalled = true;
-      node.callback.call(context);
+    const callback = node.callback;
+    if (callback) {
+      try {
+        if (typeof context !== 'undefined') {
+          callback.call(context);
+        } else {
+          callback();
+        }
+      } catch (error) {
+        firstError = firstError || error;
+      }
     }
     node = node.next;
   }
+  return firstError;
 };
 
-exports.mergeUpdateQueue = function(queue : UpdateQueue, prevState : any, props : any) : any {
-  let node : ?UpdateQueueNode = queue;
-  let state = queue.isReplace ? null : Object.assign({}, prevState);
+exports.mergeUpdateQueue = function (queue: UpdateQueue, instance: any, prevState: any, props: any): any {
+  let node: ?UpdateQueueNode = queue;
+  let state = Object.assign({}, prevState);
   while (node) {
+    state = node.isReplace ? null : state;
     let partialState;
     if (typeof node.partialState === 'function') {
       const updateFn = node.partialState;
-      partialState = updateFn(state, props);
+      partialState = updateFn.call(instance, state, props);
     } else {
       partialState = node.partialState;
     }

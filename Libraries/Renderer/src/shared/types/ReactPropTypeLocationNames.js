@@ -14,7 +14,7 @@
 
 import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
 
-type NamesType = {[key: ReactPropTypeLocations]: string};
+type NamesType = { [key: ReactPropTypeLocations]: string };
 
 var ReactPropTypeLocationNames: NamesType = {};
 
@@ -22,7 +22,7 @@ if (__DEV__) {
   ReactPropTypeLocationNames = {
     prop: 'prop',
     context: 'context',
-    childContext: 'child context',
+    childContext: 'child context'
   };
 }
 

@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactRef
+ * @flow
  */
 
 'use strict';
@@ -15,21 +16,15 @@ var ReactOwner = require('ReactOwner');
 
 import type { ReactInstance } from 'ReactInstanceType';
 import type { ReactElement } from 'ReactElementType';
-import type { Transaction } from 'Transaction';
 
 var ReactRef = {};
 
-function attachRef(ref, component, owner, transaction) {
+function attachRef(ref, component, owner) {
   if (typeof ref === 'function') {
-    ref(component.getPublicInstance(transaction));
+    ref(component.getPublicInstance());
   } else {
     // Legacy ref
-    ReactOwner.addComponentAsRefTo(
-      component,
-      ref,
-      owner,
-      transaction,
-    );
+    ReactOwner.addComponentAsRefTo(component, ref, owner);
   }
 }
 
@@ -42,24 +37,17 @@ function detachRef(ref, component, owner) {
   }
 }
 
-ReactRef.attachRefs = function(
-  instance: ReactInstance,
-  element: ReactElement | string | number | null | false,
-  transaction: Transaction,
-): void {
+ReactRef.attachRefs = function (instance: ReactInstance, element: ReactElement | string | number | null | false): void {
   if (element === null || typeof element !== 'object') {
     return;
   }
   var ref = element.ref;
   if (ref != null) {
-    attachRef(ref, instance, element._owner, transaction);
+    attachRef(ref, instance, element._owner);
   }
 };
 
-ReactRef.shouldUpdateRefs = function(
-  prevElement: ReactElement | string | number | null | false,
-  nextElement: ReactElement | string | number | null | false,
-): boolean {
+ReactRef.shouldUpdateRefs = function (prevElement: ReactElement | string | number | null | false, nextElement: ReactElement | string | number | null | false): bool {
   // If either the owner or a `ref` has changed, make sure the newest owner
   // has stored a reference to `this`, and the previous owner (if different)
   // has forgotten the reference to `this`. We use the element instead
@@ -86,17 +74,12 @@ ReactRef.shouldUpdateRefs = function(
     nextOwner = nextElement._owner;
   }
 
-  return (
-    prevRef !== nextRef ||
-    // If owner changes but we have an unchanged function ref, don't update refs
-    (typeof nextRef === 'string' && nextOwner !== prevOwner)
-  );
+  return prevRef !== nextRef ||
+  // If owner changes but we have an unchanged function ref, don't update refs
+  typeof nextRef === 'string' && nextOwner !== prevOwner;
 };
 
-ReactRef.detachRefs = function(
-  instance: ReactInstance,
-  element: ReactElement | string | number | null | false,
-): void {
+ReactRef.detachRefs = function (instance: ReactInstance, element: ReactElement | string | number | null | false): void {
   if (element === null || typeof element !== 'object') {
     return;
   }

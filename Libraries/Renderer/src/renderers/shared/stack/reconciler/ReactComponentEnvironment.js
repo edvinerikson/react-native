@@ -18,8 +18,8 @@ type ReplaceNodeWithMarkup = (node: HTMLElement, markup: string) => void;
 type ProcessChildrenUpdates = (instance: mixed, updates: mixed) => void;
 
 type Environment = {
-  replaceNodeWithMarkup: ReplaceNodeWithMarkup,
-  processChildrenUpdates: ProcessChildrenUpdates,
+  replaceNodeWithMarkup: ReplaceNodeWithMarkup;
+  processChildrenUpdates: ProcessChildrenUpdates;
 };
 
 var injected = false;
@@ -39,18 +39,13 @@ var ReactComponentEnvironment = {
   processChildrenUpdates: (null: ?ReplaceNodeWithMarkup),
 
   injection: {
-    injectEnvironment: function(environment: Environment) {
-      invariant(
-        !injected,
-        'ReactCompositeComponent: injectEnvironment() can only be called once.'
-      );
-      ReactComponentEnvironment.replaceNodeWithMarkup =
-        environment.replaceNodeWithMarkup;
-      ReactComponentEnvironment.processChildrenUpdates =
-        environment.processChildrenUpdates;
+    injectEnvironment: function (environment: Environment) {
+      invariant(!injected, 'ReactCompositeComponent: injectEnvironment() can only be called once.');
+      ReactComponentEnvironment.replaceNodeWithMarkup = environment.replaceNodeWithMarkup;
+      ReactComponentEnvironment.processChildrenUpdates = environment.processChildrenUpdates;
       injected = true;
-    },
-  },
+    }
+  }
 
 };
 

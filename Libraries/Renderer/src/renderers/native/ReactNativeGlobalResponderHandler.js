@@ -13,16 +13,13 @@
 var UIManager = require('UIManager');
 
 var ReactNativeGlobalResponderHandler = {
-  onChange: function(from, to, blockNativeResponder) {
+  onChange: function (from, to, blockNativeResponder) {
     if (to !== null) {
-      UIManager.setJSResponder(
-        to._rootNodeID,
-        blockNativeResponder
-      );
+      UIManager.setJSResponder(to._rootNodeID, blockNativeResponder);
     } else {
       UIManager.clearJSResponder();
     }
-  },
+  }
 };
 
 module.exports = ReactNativeGlobalResponderHandler;

@@ -15,19 +15,14 @@
 var invariant = require('fbjs/lib/invariant');
 
 import type { ReactInstance } from 'ReactInstanceType';
-import type { Transaction } from 'Transaction';
 
 /**
  * @param {?object} object
  * @return {boolean} True if `object` is a valid owner.
  * @final
  */
-function isValidOwner(object: any): boolean {
-  return !!(
-    object &&
-    typeof object.attachRef === 'function' &&
-    typeof object.detachRef === 'function'
-  );
+function isValidOwner(object: any): bool {
+  return !!(object && typeof object.attachRef === 'function' && typeof object.detachRef === 'function');
 }
 
 /**
@@ -70,20 +65,9 @@ var ReactOwner = {
    * @final
    * @internal
    */
-  addComponentAsRefTo: function(
-    component: ReactInstance,
-    ref: string,
-    owner: ReactInstance,
-    transaction: Transaction,
-  ): void {
-    invariant(
-      isValidOwner(owner),
-      'addComponentAsRefTo(...): Only a ReactOwner can have refs. You might ' +
-      'be adding a ref to a component that was not created inside a component\'s ' +
-      '`render` method, or you have multiple copies of React loaded ' +
-      '(details: https://fb.me/react-refs-must-have-owner).'
-    );
-    owner.attachRef(ref, component, transaction);
+  addComponentAsRefTo: function (component: ReactInstance, ref: string, owner: ReactInstance): void {
+    invariant(isValidOwner(owner), 'addComponentAsRefTo(...): Only a ReactOwner can have refs. You might ' + 'be adding a ref to a component that was not created inside a component\'s ' + '`render` method, or you have multiple copies of React loaded ' + '(details: https://fb.me/react-refs-must-have-owner).');
+    owner.attachRef(ref, component);
   },
 
   /**
@@ -95,25 +79,15 @@ var ReactOwner = {
    * @final
    * @internal
    */
-  removeComponentAsRefFrom: function(
-    component: ReactInstance,
-    ref: string,
-    owner: ReactInstance,
-  ): void {
-    invariant(
-      isValidOwner(owner),
-      'removeComponentAsRefFrom(...): Only a ReactOwner can have refs. You might ' +
-      'be removing a ref to a component that was not created inside a component\'s ' +
-      '`render` method, or you have multiple copies of React loaded ' +
-      '(details: https://fb.me/react-refs-must-have-owner).'
-    );
+  removeComponentAsRefFrom: function (component: ReactInstance, ref: string, owner: ReactInstance): void {
+    invariant(isValidOwner(owner), 'removeComponentAsRefFrom(...): Only a ReactOwner can have refs. You might ' + 'be removing a ref to a component that was not created inside a component\'s ' + '`render` method, or you have multiple copies of React loaded ' + '(details: https://fb.me/react-refs-must-have-owner).');
     var ownerPublicInstance = owner.getPublicInstance();
     // Check that `component`'s owner is still alive and that `component` is still the current ref
     // because we do not want to detach the ref if another component stole it.
     if (ownerPublicInstance && ownerPublicInstance.refs[ref] === component.getPublicInstance()) {
       owner.detachRef(ref);
     }
-  },
+  }
 
 };
 

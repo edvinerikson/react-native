@@ -13,21 +13,27 @@
 
 // Require ReactNativeDefaultInjection first for its side effects of setting up
 // the JS environment
-var ReactNativeComponentTree = require('ReactNativeComponentTree');
-var ReactNativeDefaultInjection = require('ReactNativeDefaultInjection');
 
-var ReactNativeMount = require('ReactNativeMount');
+var ReactNativeComponentTree = require('ReactNativeComponentTree');
+var ReactNativeInjection = require('ReactNativeInjection');
+var ReactNativeStackInjection = require('ReactNativeStackInjection');
+
+var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
+
+var ReactNativeMount;
+if (ReactNativeFeatureFlags.useFiber) {
+  ReactNativeMount = require('ReactNativeFiber');
+} else {
+  ReactNativeMount = require('ReactNativeMount');
+}
 var ReactUpdates = require('ReactUpdates');
 
 var findNodeHandle = require('findNodeHandle');
 
-ReactNativeDefaultInjection.inject();
+ReactNativeInjection.inject();
+ReactNativeStackInjection.inject();
 
-var render = function(
-  element: ReactElement<any>,
-  mountInto: number,
-  callback?: ?(() => void)
-): ?ReactComponent<any, any, any> {
+var render = function (element: ReactElement<any, any, any>, mountInto: number, callback?: ?() => void): ?ReactComponent<any, any, any> {
   return ReactNativeMount.renderComponent(element, mountInto, callback);
 };
 
@@ -41,21 +47,19 @@ var ReactNative = {
   unstable_batchedUpdates: ReactUpdates.batchedUpdates,
   /* eslint-enable camelcase */
 
-  unmountComponentAtNodeAndRemoveContainer: ReactNativeMount.unmountComponentAtNodeAndRemoveContainer,
+  unmountComponentAtNodeAndRemoveContainer: ReactNativeMount.unmountComponentAtNodeAndRemoveContainer
 };
 
 // Inject the runtime into a devtools global hook regardless of browser.
 // Allows for debugging when the hook is injected on the page.
 /* globals __REACT_DEVTOOLS_GLOBAL_HOOK__ */
-if (
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.inject === 'function') {
+if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' && typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.inject === 'function') {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
     ComponentTree: {
-      getClosestInstanceFromNode: function(node) {
+      getClosestInstanceFromNode: function (node) {
         return ReactNativeComponentTree.getClosestInstanceFromNode(node);
       },
-      getNodeFromInstance: function(inst) {
+      getNodeFromInstance: function (inst) {
         // inst is an internal instance (but could be a composite)
         while (inst._renderedComponent) {
           inst = inst._renderedComponent;
@@ -65,10 +69,10 @@ if (
         } else {
           return null;
         }
-      },
+      }
     },
     Mount: ReactNativeMount,
-    Reconciler: require('ReactReconciler'),
+    Reconciler: require('ReactReconciler')
   });
 }
 

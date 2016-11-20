@@ -14,15 +14,15 @@
 var emptyComponentFactory;
 
 var ReactEmptyComponentInjection = {
-  injectEmptyComponentFactory: function(factory) {
+  injectEmptyComponentFactory: function (factory) {
     emptyComponentFactory = factory;
-  },
+  }
 };
 
 var ReactEmptyComponent = {
-  create: function(instantiate) {
+  create: function (instantiate) {
     return emptyComponentFactory(instantiate);
-  },
+  }
 };
 
 ReactEmptyComponent.injection = ReactEmptyComponentInjection;

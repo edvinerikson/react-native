@@ -7,15 +7,19 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule findNodeHandle
+ * @flow
  */
 
 'use strict';
 
 var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
 
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
+
+import type { ReactInstance } from 'ReactInstanceType';
 
 /**
  * ReactNative vs ReactWeb
@@ -49,17 +53,11 @@ var warning = require('fbjs/lib/warning');
 
 function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
-    var owner = ReactCurrentOwner.current;
+    // TODO: fix this unsafe cast to work with Fiber.
+    var owner = ((ReactCurrentOwner.current: any): ReactInstance | null);
     if (owner !== null) {
-      warning(
-        owner._warnedAboutRefsInRender,
-        '%s is accessing findNodeHandle inside its render(). ' +
-        'render() should be a pure function of props and state. It should ' +
-        'never access something that requires stale data from the previous ' +
-        'render, such as refs. Move this logic to componentDidMount and ' +
-        'componentDidUpdate instead.',
-        owner.getName() || 'A component'
-      );
+      warning(owner._warnedAboutRefsInRender, '%s is accessing findNodeHandle inside its render(). ' + 'render() should be a pure function of props and state. It should ' + 'never access something that requires stale data from the previous ' + 'render, such as refs. Move this logic to componentDidMount and ' + 'componentDidUpdate instead.', owner.getName() || 'A component');
+
       owner._warnedAboutRefsInRender = true;
     }
   }
@@ -76,7 +74,11 @@ function findNodeHandle(componentOrHandle: any): ?number {
   // TODO (balpert): Wrap iOS native components in a composite wrapper, then
   // ReactInstanceMap.get here will always succeed for mounted components
   var internalInstance = ReactInstanceMap.get(component);
+
   if (internalInstance) {
+    if (ReactNativeFeatureFlags.useFiber) {
+      return internalInstance.output._rootNodeID;
+    }
     return internalInstance.getHostNode();
   } else {
     var rootNodeID = component._rootNodeID;
@@ -84,25 +86,11 @@ function findNodeHandle(componentOrHandle: any): ?number {
       return rootNodeID;
     } else {
       invariant(
-        (
-          // Native
-          typeof component === 'object' &&
-          '_rootNodeID' in component
-        ) || (
-          // Composite
-          component.render != null &&
-          typeof component.render === 'function'
-        ),
-        'findNodeHandle(...): Argument is not a component ' +
-        '(type: %s, keys: %s)',
-        typeof component,
-        Object.keys(component)
-      );
-      invariant(
-        false,
-        'findNodeHandle(...): Unable to find node handle for unmounted ' +
-        'component.'
-      );
+      // Native
+      typeof component === 'object' && '_rootNodeID' in component ||
+      // Composite
+      component.render != null && typeof component.render === 'function', 'findNodeHandle(...): Argument is not a component ' + '(type: %s, keys: %s)', typeof component, Object.keys(component));
+      invariant(false, 'findNodeHandle(...): Unable to find node handle for unmounted ' + 'component.');
     }
   }
 }

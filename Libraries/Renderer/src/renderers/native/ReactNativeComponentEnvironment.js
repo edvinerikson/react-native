@@ -23,11 +23,9 @@ var ReactNativeComponentEnvironment = {
   /**
    * @param {DOMElement} Element to clear.
    */
-  clearNode: function(/*containerView*/) {
+  clearNode: function () /*containerView*/{},
 
-  },
-
-  ReactReconcileTransaction: ReactNativeReconcileTransaction,
+  ReactReconcileTransaction: ReactNativeReconcileTransaction
 };
 
 module.exports = ReactNativeComponentEnvironment;

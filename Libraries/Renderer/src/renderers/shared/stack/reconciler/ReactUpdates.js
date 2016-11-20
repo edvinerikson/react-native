@@ -11,7 +11,6 @@
 
 'use strict';
 
-var CallbackQueue = require('CallbackQueue');
 var PooledClass = require('PooledClass');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactReconciler = require('ReactReconciler');
@@ -21,24 +20,18 @@ var invariant = require('fbjs/lib/invariant');
 
 var dirtyComponents = [];
 var updateBatchNumber = 0;
-var asapCallbackQueue = CallbackQueue.getPooled();
-var asapEnqueued = false;
 
 var batchingStrategy = null;
 
 function ensureInjected() {
-  invariant(
-    ReactUpdates.ReactReconcileTransaction && batchingStrategy,
-    'ReactUpdates: must inject a reconcile transaction class and batching ' +
-    'strategy'
-  );
+  invariant(ReactUpdates.ReactReconcileTransaction && batchingStrategy, 'ReactUpdates: must inject a reconcile transaction class and batching ' + 'strategy');
 }
 
 var NESTED_UPDATES = {
-  initialize: function() {
+  initialize: function () {
     this.dirtyComponentsLength = dirtyComponents.length;
   },
-  close: function() {
+  close: function () {
     if (this.dirtyComponentsLength !== dirtyComponents.length) {
       // Additional updates were enqueued by componentDidUpdate handlers or
       // similar; before our own UPDATE_QUEUEING wrapper closes, we want to run
@@ -50,59 +43,35 @@ var NESTED_UPDATES = {
     } else {
       dirtyComponents.length = 0;
     }
-  },
+  }
 };
 
-var UPDATE_QUEUEING = {
-  initialize: function() {
-    this.callbackQueue.reset();
-  },
-  close: function() {
-    this.callbackQueue.notifyAll();
-  },
-};
-
-var TRANSACTION_WRAPPERS = [NESTED_UPDATES, UPDATE_QUEUEING];
+var TRANSACTION_WRAPPERS = [NESTED_UPDATES];
 
 function ReactUpdatesFlushTransaction() {
   this.reinitializeTransaction();
   this.dirtyComponentsLength = null;
-  this.callbackQueue = CallbackQueue.getPooled();
   this.reconcileTransaction = ReactUpdates.ReactReconcileTransaction.getPooled(
-    /* useCreateElement */ true
-  );
+  /* useCreateElement */true);
 }
 
-Object.assign(
-  ReactUpdatesFlushTransaction.prototype,
-  Transaction,
-  {
-    getTransactionWrappers: function() {
-      return TRANSACTION_WRAPPERS;
-    },
+Object.assign(ReactUpdatesFlushTransaction.prototype, Transaction, {
+  getTransactionWrappers: function () {
+    return TRANSACTION_WRAPPERS;
+  },
 
-    destructor: function() {
-      this.dirtyComponentsLength = null;
-      CallbackQueue.release(this.callbackQueue);
-      this.callbackQueue = null;
-      ReactUpdates.ReactReconcileTransaction.release(this.reconcileTransaction);
-      this.reconcileTransaction = null;
-    },
+  destructor: function () {
+    this.dirtyComponentsLength = null;
+    ReactUpdates.ReactReconcileTransaction.release(this.reconcileTransaction);
+    this.reconcileTransaction = null;
+  },
 
-    perform: function(method, scope, a) {
-      // Essentially calls `this.reconcileTransaction.perform(method, scope, a)`
-      // with this transaction's wrappers around it.
-      return Transaction.perform.call(
-        this,
-        this.reconcileTransaction.perform,
-        this.reconcileTransaction,
-        method,
-        scope,
-        a
-      );
-    },
+  perform: function (method, scope, a) {
+    // Essentially calls `this.reconcileTransaction.perform(method, scope, a)`
+    // with this transaction's wrappers around it.
+    return Transaction.perform.call(this, this.reconcileTransaction.perform, this.reconcileTransaction, method, scope, a);
   }
-);
+});
 
 PooledClass.addPoolingTo(ReactUpdatesFlushTransaction);
 
@@ -124,13 +93,7 @@ function mountOrderComparator(c1, c2) {
 
 function runBatchedUpdates(transaction) {
   var len = transaction.dirtyComponentsLength;
-  invariant(
-    len === dirtyComponents.length,
-    'Expected flush transaction\'s stored dirty-components length (%s) to ' +
-    'match dirty-components array length (%s).',
-    len,
-    dirtyComponents.length
-  );
+  invariant(len === dirtyComponents.length, 'Expected flush transaction\'s stored dirty-components length (%s) to ' + 'match dirty-components array length (%s).', len, dirtyComponents.length);
 
   // Since reconciling a component higher in the owner hierarchy usually (not
   // always -- see shouldComponentUpdate()) will reconcile children, reconcile
@@ -167,11 +130,7 @@ function runBatchedUpdates(transaction) {
       console.time(markerName);
     }
 
-    ReactReconciler.performUpdateIfNecessary(
-      component,
-      transaction.reconcileTransaction,
-      updateBatchNumber
-    );
+    ReactReconciler.performUpdateIfNecessary(component, transaction.reconcileTransaction, updateBatchNumber);
 
     if (markerName) {
       console.timeEnd(markerName);
@@ -179,33 +138,22 @@ function runBatchedUpdates(transaction) {
 
     if (callbacks) {
       for (var j = 0; j < callbacks.length; j++) {
-        transaction.callbackQueue.enqueue(
-          callbacks[j],
-          component.getPublicInstance()
-        );
+        transaction.reconcileTransaction.getReactMountReady().enqueue(callbacks[j], component.getPublicInstance());
       }
     }
   }
 }
 
-var flushBatchedUpdates = function() {
+var flushBatchedUpdates = function () {
   // ReactUpdatesFlushTransaction's wrappers will clear the dirtyComponents
   // array and perform any updates enqueued by mount-ready handlers (i.e.,
   // componentDidUpdate) but we need to check here too in order to catch
-  // updates enqueued by setState callbacks and asap calls.
-  while (dirtyComponents.length || asapEnqueued) {
+  // updates enqueued by setState callbacks.
+  while (dirtyComponents.length) {
     if (dirtyComponents.length) {
       var transaction = ReactUpdatesFlushTransaction.getPooled();
       transaction.perform(runBatchedUpdates, null, transaction);
       ReactUpdatesFlushTransaction.release(transaction);
-    }
-
-    if (asapEnqueued) {
-      asapEnqueued = false;
-      var queue = asapCallbackQueue;
-      asapCallbackQueue = CallbackQueue.getPooled();
-      queue.notifyAll();
-      CallbackQueue.release(queue);
     }
   }
 };
@@ -234,48 +182,22 @@ function enqueueUpdate(component) {
   }
 }
 
-/**
- * Enqueue a callback to be run at the end of the current batching cycle. Throws
- * if no updates are currently being performed.
- */
-function asap(callback, context) {
-  invariant(
-    batchingStrategy.isBatchingUpdates,
-    'ReactUpdates.asap: Can\'t enqueue an asap callback in a context where' +
-    'updates are not being batched.'
-  );
-  asapCallbackQueue.enqueue(callback, context);
-  asapEnqueued = true;
-}
-
 var ReactUpdatesInjection = {
-  injectReconcileTransaction: function(ReconcileTransaction) {
-    invariant(
-      ReconcileTransaction,
-      'ReactUpdates: must provide a reconcile transaction class'
-    );
+  injectReconcileTransaction: function (ReconcileTransaction) {
+    invariant(ReconcileTransaction, 'ReactUpdates: must provide a reconcile transaction class');
     ReactUpdates.ReactReconcileTransaction = ReconcileTransaction;
   },
 
-  injectBatchingStrategy: function(_batchingStrategy) {
-    invariant(
-      _batchingStrategy,
-      'ReactUpdates: must provide a batching strategy'
-    );
-    invariant(
-      typeof _batchingStrategy.batchedUpdates === 'function',
-      'ReactUpdates: must provide a batchedUpdates() function'
-    );
-    invariant(
-      typeof _batchingStrategy.isBatchingUpdates === 'boolean',
-      'ReactUpdates: must provide an isBatchingUpdates boolean attribute'
-    );
+  injectBatchingStrategy: function (_batchingStrategy) {
+    invariant(_batchingStrategy, 'ReactUpdates: must provide a batching strategy');
+    invariant(typeof _batchingStrategy.batchedUpdates === 'function', 'ReactUpdates: must provide a batchedUpdates() function');
+    invariant(typeof _batchingStrategy.isBatchingUpdates === 'boolean', 'ReactUpdates: must provide an isBatchingUpdates boolean attribute');
     batchingStrategy = _batchingStrategy;
   },
 
-  getBatchingStrategy: function() {
+  getBatchingStrategy: function () {
     return batchingStrategy;
-  },
+  }
 };
 
 var ReactUpdates = {
@@ -290,8 +212,7 @@ var ReactUpdates = {
   batchedUpdates: batchedUpdates,
   enqueueUpdate: enqueueUpdate,
   flushBatchedUpdates: flushBatchedUpdates,
-  injection: ReactUpdatesInjection,
-  asap: asap,
+  injection: ReactUpdatesInjection
 };
 
 module.exports = ReactUpdates;

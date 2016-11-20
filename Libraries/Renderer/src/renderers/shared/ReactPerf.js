@@ -25,7 +25,7 @@ function roundFloat(val, base = 2) {
 
 // Flow type definition of console.table is too strict right now, see
 // https://github.com/facebook/flow/pull/2353 for updates
-function consoleTable(table: Array<{[key: string]: any}>): void {
+function consoleTable(table: Array<{ [key: string]: any }>): void {
   console.table((table: any));
 }
 
@@ -35,10 +35,7 @@ function warnInProduction() {
   }
   alreadyWarned = true;
   if (typeof console !== 'undefined') {
-    console.error(
-      'ReactPerf is not supported in the production builds of React. ' +
-      'To collect measurements, please use the development build of React instead.'
-    );
+    console.error('ReactPerf is not supported in the production builds of React. ' + 'To collect measurements, please use the development build of React instead.');
   }
 }
 
@@ -61,7 +58,7 @@ function getExclusive(flushHistory = getLastMeasurements()) {
   var affectedIDs = {};
 
   function updateAggregatedStats(treeSnapshot, instanceID, timerType, applyUpdate) {
-    var {displayName} = treeSnapshot[instanceID];
+    var { displayName } = treeSnapshot[instanceID];
     var key = displayName;
     var stats = aggregatedStats[key];
     if (!stats) {
@@ -71,7 +68,7 @@ function getExclusive(flushHistory = getLastMeasurements()) {
         instanceCount: 0,
         counts: {},
         durations: {},
-        totalDuration: 0,
+        totalDuration: 0
       };
     }
     if (!stats.durations[timerType]) {
@@ -85,9 +82,9 @@ function getExclusive(flushHistory = getLastMeasurements()) {
   }
 
   flushHistory.forEach(flush => {
-    var {measurements, treeSnapshot} = flush;
+    var { measurements, treeSnapshot } = flush;
     measurements.forEach(measurement => {
-      var {duration, instanceID, timerType} = measurement;
+      var { duration, instanceID, timerType } = measurement;
       updateAggregatedStats(treeSnapshot, instanceID, timerType, stats => {
         stats.totalDuration += duration;
         stats.durations[timerType] += duration;
@@ -96,14 +93,10 @@ function getExclusive(flushHistory = getLastMeasurements()) {
     });
   });
 
-  return Object.keys(aggregatedStats)
-    .map(key => ({
-      ...aggregatedStats[key],
-      instanceCount: Object.keys(affectedIDs[key]).length,
-    }))
-    .sort((a, b) =>
-      b.totalDuration - a.totalDuration
-    );
+  return Object.keys(aggregatedStats).map(key => ({
+    ...aggregatedStats[key],
+    instanceCount: Object.keys(affectedIDs[key]).length
+  })).sort((a, b) => b.totalDuration - a.totalDuration);
 }
 
 function getInclusive(flushHistory = getLastMeasurements()) {
@@ -116,7 +109,7 @@ function getInclusive(flushHistory = getLastMeasurements()) {
   var affectedIDs = {};
 
   function updateAggregatedStats(treeSnapshot, instanceID, applyUpdate) {
-    var {displayName, ownerID} = treeSnapshot[instanceID];
+    var { displayName, ownerID } = treeSnapshot[instanceID];
     var owner = treeSnapshot[ownerID];
     var key = (owner ? owner.displayName + ' > ' : '') + displayName;
     var stats = aggregatedStats[key];
@@ -126,7 +119,7 @@ function getInclusive(flushHistory = getLastMeasurements()) {
         key,
         instanceCount: 0,
         inclusiveRenderDuration: 0,
-        renderCount: 0,
+        renderCount: 0
       };
     }
     affectedIDs[key][instanceID] = true;
@@ -135,9 +128,9 @@ function getInclusive(flushHistory = getLastMeasurements()) {
 
   var isCompositeByID = {};
   flushHistory.forEach(flush => {
-    var {measurements} = flush;
+    var { measurements } = flush;
     measurements.forEach(measurement => {
-      var {instanceID, timerType} = measurement;
+      var { instanceID, timerType } = measurement;
       if (timerType !== 'render') {
         return;
       }
@@ -146,9 +139,9 @@ function getInclusive(flushHistory = getLastMeasurements()) {
   });
 
   flushHistory.forEach(flush => {
-    var {measurements, treeSnapshot} = flush;
+    var { measurements, treeSnapshot } = flush;
     measurements.forEach(measurement => {
-      var {duration, instanceID, timerType} = measurement;
+      var { duration, instanceID, timerType } = measurement;
       if (timerType !== 'render') {
         return;
       }
@@ -169,14 +162,10 @@ function getInclusive(flushHistory = getLastMeasurements()) {
     });
   });
 
-  return Object.keys(aggregatedStats)
-    .map(key => ({
-      ...aggregatedStats[key],
-      instanceCount: Object.keys(affectedIDs[key]).length,
-    }))
-    .sort((a, b) =>
-      b.inclusiveRenderDuration - a.inclusiveRenderDuration
-    );
+  return Object.keys(aggregatedStats).map(key => ({
+    ...aggregatedStats[key],
+    instanceCount: Object.keys(affectedIDs[key]).length
+  })).sort((a, b) => b.inclusiveRenderDuration - a.inclusiveRenderDuration);
 }
 
 function getWasted(flushHistory = getLastMeasurements()) {
@@ -189,7 +178,7 @@ function getWasted(flushHistory = getLastMeasurements()) {
   var affectedIDs = {};
 
   function updateAggregatedStats(treeSnapshot, instanceID, applyUpdate) {
-    var {displayName, ownerID} = treeSnapshot[instanceID];
+    var { displayName, ownerID } = treeSnapshot[instanceID];
     var owner = treeSnapshot[ownerID];
     var key = (owner ? owner.displayName + ' > ' : '') + displayName;
     var stats = aggregatedStats[key];
@@ -199,7 +188,7 @@ function getWasted(flushHistory = getLastMeasurements()) {
         key,
         instanceCount: 0,
         inclusiveRenderDuration: 0,
-        renderCount: 0,
+        renderCount: 0
       };
     }
     affectedIDs[key][instanceID] = true;
@@ -207,13 +196,13 @@ function getWasted(flushHistory = getLastMeasurements()) {
   }
 
   flushHistory.forEach(flush => {
-    var {measurements, treeSnapshot, operations} = flush;
+    var { measurements, treeSnapshot, operations } = flush;
     var isDefinitelyNotWastedByID = {};
 
     // Find host components associated with an operation in this batch.
     // Mark all components in their parent tree as definitely not wasted.
     operations.forEach(operation => {
-      var {instanceID} = operation;
+      var { instanceID } = operation;
       var nextParentID = instanceID;
       while (nextParentID) {
         isDefinitelyNotWastedByID[nextParentID] = true;
@@ -225,7 +214,7 @@ function getWasted(flushHistory = getLastMeasurements()) {
     // These are potential candidates for being wasted renders.
     var renderedCompositeIDs = {};
     measurements.forEach(measurement => {
-      var {instanceID, timerType} = measurement;
+      var { instanceID, timerType } = measurement;
       if (timerType !== 'render') {
         return;
       }
@@ -233,7 +222,7 @@ function getWasted(flushHistory = getLastMeasurements()) {
     });
 
     measurements.forEach(measurement => {
-      var {duration, instanceID, timerType} = measurement;
+      var { duration, instanceID, timerType } = measurement;
       if (timerType !== 'render') {
         return;
       }
@@ -254,9 +243,7 @@ function getWasted(flushHistory = getLastMeasurements()) {
       while (nextParentID) {
         // Any parents rendered during this batch are considered wasted
         // unless we previously marked them as dirty.
-        var isWasted =
-          renderedCompositeIDs[nextParentID] &&
-          !isDefinitelyNotWastedByID[nextParentID];
+        var isWasted = renderedCompositeIDs[nextParentID] && !isDefinitelyNotWastedByID[nextParentID];
         if (isWasted) {
           updateAggregatedStats(treeSnapshot, nextParentID, stats => {
             stats.inclusiveRenderDuration += duration;
@@ -267,14 +254,10 @@ function getWasted(flushHistory = getLastMeasurements()) {
     });
   });
 
-  return Object.keys(aggregatedStats)
-    .map(key => ({
-      ...aggregatedStats[key],
-      instanceCount: Object.keys(affectedIDs[key]).length,
-    }))
-    .sort((a, b) =>
-      b.inclusiveRenderDuration - a.inclusiveRenderDuration
-    );
+  return Object.keys(aggregatedStats).map(key => ({
+    ...aggregatedStats[key],
+    instanceCount: Object.keys(affectedIDs[key]).length
+  })).sort((a, b) => b.inclusiveRenderDuration - a.inclusiveRenderDuration);
 }
 
 function getOperations(flushHistory = getLastMeasurements()) {
@@ -285,10 +268,10 @@ function getOperations(flushHistory = getLastMeasurements()) {
 
   var stats = [];
   flushHistory.forEach((flush, flushIndex) => {
-    var {operations, treeSnapshot} = flush;
+    var { operations, treeSnapshot } = flush;
     operations.forEach(operation => {
-      var {instanceID, type, payload} = operation;
-      var {displayName, ownerID} = treeSnapshot[instanceID];
+      var { instanceID, type, payload } = operation;
+      var { displayName, ownerID } = treeSnapshot[instanceID];
       var owner = treeSnapshot[ownerID];
       var key = (owner ? owner.displayName + ' > ' : '') + displayName;
 
@@ -298,7 +281,7 @@ function getOperations(flushHistory = getLastMeasurements()) {
         key,
         type,
         ownerID,
-        payload,
+        payload
       });
     });
   });
@@ -313,7 +296,7 @@ function printExclusive(flushHistory?: FlushHistory) {
 
   var stats = getExclusive(flushHistory);
   var table = stats.map(item => {
-    var {key, instanceCount, totalDuration} = item;
+    var { key, instanceCount, totalDuration } = item;
     var renderCount = item.counts.render || 0;
     var renderDuration = item.durations.render || 0;
     return {
@@ -321,11 +304,9 @@ function printExclusive(flushHistory?: FlushHistory) {
       'Total time (ms)': roundFloat(totalDuration),
       'Instance count': instanceCount,
       'Total render time (ms)': roundFloat(renderDuration),
-      'Average render time (ms)': renderCount ?
-        roundFloat(renderDuration / renderCount) :
-        undefined,
+      'Average render time (ms)': renderCount ? roundFloat(renderDuration / renderCount) : undefined,
       'Render count': renderCount,
-      'Total lifecycle time (ms)': roundFloat(totalDuration - renderDuration),
+      'Total lifecycle time (ms)': roundFloat(totalDuration - renderDuration)
     };
   });
   consoleTable(table);
@@ -339,12 +320,12 @@ function printInclusive(flushHistory?: FlushHistory) {
 
   var stats = getInclusive(flushHistory);
   var table = stats.map(item => {
-    var {key, instanceCount, inclusiveRenderDuration, renderCount} = item;
+    var { key, instanceCount, inclusiveRenderDuration, renderCount } = item;
     return {
       'Owner > Component': key,
       'Inclusive render time (ms)': roundFloat(inclusiveRenderDuration),
       'Instance count': instanceCount,
-      'Render count': renderCount,
+      'Render count': renderCount
     };
   });
   consoleTable(table);
@@ -358,12 +339,12 @@ function printWasted(flushHistory?: FlushHistory) {
 
   var stats = getWasted(flushHistory);
   var table = stats.map(item => {
-    var {key, instanceCount, inclusiveRenderDuration, renderCount} = item;
+    var { key, instanceCount, inclusiveRenderDuration, renderCount } = item;
     return {
       'Owner > Component': key,
       'Inclusive wasted time (ms)': roundFloat(inclusiveRenderDuration),
       'Instance count': instanceCount,
-      'Render count': renderCount,
+      'Render count': renderCount
     };
   });
   consoleTable(table);
@@ -379,34 +360,24 @@ function printOperations(flushHistory?: FlushHistory) {
   var table = stats.map(stat => ({
     'Owner > Node': stat.key,
     'Operation': stat.type,
-    'Payload': typeof stat.payload === 'object' ?
-      JSON.stringify(stat.payload) :
-      stat.payload,
+    'Payload': typeof stat.payload === 'object' ? JSON.stringify(stat.payload) : stat.payload,
     'Flush index': stat.flushIndex,
     'Owner Component ID': stat.ownerID,
-    'DOM Component ID': stat.instanceID,
+    'DOM Component ID': stat.instanceID
   }));
   consoleTable(table);
 }
 
 var warnedAboutPrintDOM = false;
 function printDOM(measurements: FlushHistory) {
-  warning(
-    warnedAboutPrintDOM,
-    '`ReactPerf.printDOM(...)` is deprecated. Use ' +
-    '`ReactPerf.printOperations(...)` instead.'
-  );
+  warning(warnedAboutPrintDOM, '`ReactPerf.printDOM(...)` is deprecated. Use ' + '`ReactPerf.printOperations(...)` instead.');
   warnedAboutPrintDOM = true;
   return printOperations(measurements);
 }
 
 var warnedAboutGetMeasurementsSummaryMap = false;
 function getMeasurementsSummaryMap(measurements: FlushHistory) {
-  warning(
-    warnedAboutGetMeasurementsSummaryMap,
-    '`ReactPerf.getMeasurementsSummaryMap(...)` is deprecated. Use ' +
-    '`ReactPerf.getWasted(...)` instead.'
-  );
+  warning(warnedAboutGetMeasurementsSummaryMap, '`ReactPerf.getMeasurementsSummaryMap(...)` is deprecated. Use ' + '`ReactPerf.getWasted(...)` instead.');
   warnedAboutGetMeasurementsSummaryMap = true;
   return getWasted(measurements);
 }
@@ -453,7 +424,7 @@ var ReactPerfAnalysis = {
   isRunning,
   // Deprecated:
   printDOM,
-  getMeasurementsSummaryMap,
+  getMeasurementsSummaryMap
 };
 
 module.exports = ReactPerfAnalysis;

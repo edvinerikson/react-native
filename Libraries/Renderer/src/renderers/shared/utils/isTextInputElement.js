@@ -15,7 +15,8 @@
 /**
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html#input-type-attr-summary
  */
-var supportedInputTypes: {[key: string]: true | void} = {
+
+var supportedInputTypes: { [key: string]: true | void } = {
   'color': true,
   'date': true,
   'datetime': true,
@@ -30,10 +31,10 @@ var supportedInputTypes: {[key: string]: true | void} = {
   'text': true,
   'time': true,
   'url': true,
-  'week': true,
+  'week': true
 };
 
-function isTextInputElement(elem: ?HTMLElement): boolean {
+function isTextInputElement(elem: ?HTMLElement): bool {
   var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
 
   if (nodeName === 'input') {

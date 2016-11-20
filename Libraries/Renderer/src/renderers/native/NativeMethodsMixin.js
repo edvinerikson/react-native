@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule NativeMethodsMixin
+ * @flow
  */
 'use strict';
 
@@ -17,37 +18,16 @@ var UIManager = require('UIManager');
 var findNodeHandle = require('findNodeHandle');
 var invariant = require('fbjs/lib/invariant');
 
-type MeasureOnSuccessCallback = (
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  pageX: number,
-  pageY: number
-) => void
+type MeasureOnSuccessCallback = (x: number, y: number, width: number, height: number, pageX: number, pageY: number) => void;
 
-type MeasureInWindowOnSuccessCallback = (
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-) => void
+type MeasureInWindowOnSuccessCallback = (x: number, y: number, width: number, height: number) => void;
 
-type MeasureLayoutOnSuccessCallback = (
-  left: number,
-  top: number,
-  width: number,
-  height: number
-) => void
+type MeasureLayoutOnSuccessCallback = (left: number, top: number, width: number, height: number) => void;
 
 function warnForStyleProps(props, validAttributes) {
   for (var key in validAttributes.style) {
     if (!(validAttributes[key] || props[key] === undefined)) {
-      console.error(
-        'You are setting the style `{ ' + key + ': ... }` as a prop. You ' +
-        'should nest it in a style object. ' +
-        'E.g. `{ style: { ' + key + ': ... } }`'
-      );
+      console.error('You are setting the style `{ ' + key + ': ... }` as a prop. You ' + 'should nest it in a style object. ' + 'E.g. `{ style: { ' + key + ': ... } }`');
     }
   }
 }
@@ -82,11 +62,8 @@ var NativeMethodsMixin = {
    * possible, consider using the [`onLayout`
    * prop](docs/view.html#onlayout) instead.
    */
-  measure: function(callback: MeasureOnSuccessCallback) {
-    UIManager.measure(
-      findNodeHandle(this),
-      mountSafeCallback(this, callback)
-    );
+  measure: function (callback: MeasureOnSuccessCallback) {
+    UIManager.measure(findNodeHandle(this), mountSafeCallback(this, callback));
   },
 
   /**
@@ -104,11 +81,8 @@ var NativeMethodsMixin = {
    * Note that these measurements are not available until after the rendering
    * has been completed in native.
    */
-  measureInWindow: function(callback: MeasureInWindowOnSuccessCallback) {
-    UIManager.measureInWindow(
-      findNodeHandle(this),
-      mountSafeCallback(this, callback)
-    );
+  measureInWindow: function (callback: MeasureInWindowOnSuccessCallback) {
+    UIManager.measureInWindow(findNodeHandle(this), mountSafeCallback(this, callback));
   },
 
   /**
@@ -119,17 +93,9 @@ var NativeMethodsMixin = {
    * As always, to obtain a native node handle for a component, you can use
    * `React.findNodeHandle(component)`.
    */
-  measureLayout: function(
-    relativeToNativeNode: number,
-    onSuccess: MeasureLayoutOnSuccessCallback,
-    onFail: () => void /* currently unused */
-  ) {
-    UIManager.measureLayout(
-      findNodeHandle(this),
-      relativeToNativeNode,
-      mountSafeCallback(this, onFail),
-      mountSafeCallback(this, onSuccess)
-    );
+  measureLayout: function (relativeToNativeNode: number, onSuccess: MeasureLayoutOnSuccessCallback, onFail /* currently unused */
+  : () => void) {
+    UIManager.measureLayout(findNodeHandle(this), relativeToNativeNode, mountSafeCallback(this, onFail), mountSafeCallback(this, onSuccess));
   },
 
   /**
@@ -138,54 +104,39 @@ var NativeMethodsMixin = {
    * next render, they will remain active (see [Direct
    * Manipulation](docs/direct-manipulation.html)).
    */
-  setNativeProps: function(nativeProps: Object) {
-    if (!this.viewConfig) {
-      var ctor = this.constructor;
-      var componentName = ctor.displayName || ctor.name || '<Unknown Component>';
-      invariant(false, componentName + ' "viewConfig" is not defined.');
-    }
-
+  setNativeProps: function (nativeProps: Object) {
     if (__DEV__) {
       warnForStyleProps(nativeProps, this.viewConfig.validAttributes);
     }
 
-    var updatePayload = ReactNativeAttributePayload.create(
-      nativeProps,
-      this.viewConfig.validAttributes
-    );
+    var updatePayload = ReactNativeAttributePayload.create(nativeProps, this.viewConfig.validAttributes);
 
-    UIManager.updateView(
-      findNodeHandle(this),
-      this.viewConfig.uiViewClassName,
-      updatePayload
-    );
+    UIManager.updateView(findNodeHandle(this), this.viewConfig.uiViewClassName, updatePayload);
   },
 
   /**
    * Requests focus for the given input or view. The exact behavior triggered
    * will depend on the platform and type of view.
    */
-  focus: function() {
+  focus: function () {
     TextInputState.focusTextInput(findNodeHandle(this));
   },
 
   /**
    * Removes focus from an input or view. This is the opposite of `focus()`.
    */
-  blur: function() {
+  blur: function () {
     TextInputState.blurTextInput(findNodeHandle(this));
-  },
+  }
 };
 
 function throwOnStylesProp(component, props) {
   if (props.styles !== undefined) {
     var owner = component._owner || null;
     var name = component.constructor.displayName;
-    var msg = '`styles` is not a supported property of `' + name + '`, did ' +
-      'you mean `style` (singular)?';
+    var msg = '`styles` is not a supported property of `' + name + '`, did ' + 'you mean `style` (singular)?';
     if (owner && owner.constructor && owner.constructor.displayName) {
-      msg += '\n\nCheck the `' + owner.constructor.displayName + '` parent ' +
-        ' component.';
+      msg += '\n\nCheck the `' + owner.constructor.displayName + '` parent ' + ' component.';
     }
     throw new Error(msg);
   }
@@ -195,15 +146,11 @@ if (__DEV__) {
   // __DEV__ without actually implementing them (setting them to undefined
   // isn't allowed by ReactClass)
   var NativeMethodsMixin_DEV = (NativeMethodsMixin: any);
-  invariant(
-    !NativeMethodsMixin_DEV.componentWillMount &&
-    !NativeMethodsMixin_DEV.componentWillReceiveProps,
-    'Do not override existing functions.'
-  );
-  NativeMethodsMixin_DEV.componentWillMount = function() {
+  invariant(!NativeMethodsMixin_DEV.componentWillMount && !NativeMethodsMixin_DEV.componentWillReceiveProps, 'Do not override existing functions.');
+  NativeMethodsMixin_DEV.componentWillMount = function () {
     throwOnStylesProp(this, this.props);
   };
-  NativeMethodsMixin_DEV.componentWillReceiveProps = function(newProps) {
+  NativeMethodsMixin_DEV.componentWillReceiveProps = function (newProps) {
     throwOnStylesProp(this, newProps);
   };
 }
@@ -212,12 +159,9 @@ if (__DEV__) {
  * In the future, we should cleanup callbacks by cancelling them instead of
  * using this.
  */
-function mountSafeCallback(
-  context: ReactComponent<any, any, any>,
-  callback: ?Function
-): any {
-  return function() {
-    if (!callback || (context.isMounted && !context.isMounted())) {
+function mountSafeCallback(context: ReactComponent<any, any, any>, callback: ?Function): any {
+  return function () {
+    if (!callback || typeof context.isMounted === 'function' && !context.isMounted()) {
       return undefined;
     }
     return callback.apply(context, arguments);

@@ -12,7 +12,6 @@
 'use strict';
 
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
-var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
@@ -21,11 +20,7 @@ import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
 
 var ReactComponentTreeHook;
 
-if (
-  typeof process !== 'undefined' &&
-  process.env &&
-  process.env.NODE_ENV === 'test'
-) {
+if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'test') {
   // Temporary hack.
   // Inline requires don't work well with Jest:
   // https://github.com/facebook/react/issues/7240
@@ -48,14 +43,7 @@ var loggedTypeFailures = {};
  * @param {?number} debugID The React component instance that is being type-checked
  * @private
  */
-function checkReactTypeSpec(
-  typeSpecs,
-  values,
-  location: ReactPropTypeLocations,
-  componentName,
-  element,
-  debugID,
-) {
+function checkReactTypeSpec(typeSpecs, values, location: ReactPropTypeLocations, componentName, element, debugID) {
   for (var typeSpecName in typeSpecs) {
     if (typeSpecs.hasOwnProperty(typeSpecName)) {
       var error;
@@ -65,30 +53,12 @@ function checkReactTypeSpec(
       try {
         // This is intentionally an invariant that gets caught. It's the same
         // behavior as without this statement except with a better message.
-        invariant(
-          typeof typeSpecs[typeSpecName] === 'function',
-          '%s: %s type `%s` is invalid; it must be a function, usually from ' +
-          'React.PropTypes.',
-          componentName || 'React class',
-          ReactPropTypeLocationNames[location],
-          typeSpecName
-        );
-        error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, ReactPropTypesSecret);
+        invariant(typeof typeSpecs[typeSpecName] === 'function', '%s: %s type `%s` is invalid; it must be a function, usually from ' + 'React.PropTypes.', componentName || 'React class', ReactPropTypeLocationNames[location], typeSpecName);
+        error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location);
       } catch (ex) {
         error = ex;
       }
-      warning(
-        !error || error instanceof Error,
-        '%s: type specification of %s `%s` is invalid; the type checker ' +
-        'function must return `null` or an `Error` but returned a %s. ' +
-        'You may have forgotten to pass an argument to the type checker ' +
-        'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' +
-        'shape all require an argument).',
-        componentName || 'React class',
-        ReactPropTypeLocationNames[location],
-        typeSpecName,
-        typeof error
-      );
+      warning(!error || error instanceof Error, '%s: type specification of %s `%s` is invalid; the type checker ' + 'function must return `null` or an `Error` but returned a %s. ' + 'You may have forgotten to pass an argument to the type checker ' + 'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' + 'shape all require an argument).', componentName || 'React class', ReactPropTypeLocationNames[location], typeSpecName, typeof error);
       if (error instanceof Error && !(error.message in loggedTypeFailures)) {
         // Only monitor this failure once because there tends to be a lot of the
         // same error.
@@ -107,13 +77,7 @@ function checkReactTypeSpec(
           }
         }
 
-        warning(
-          false,
-          'Failed %s type: %s%s',
-          location,
-          error.message,
-          componentStackInfo
-        );
+        warning(false, 'Failed %s type: %s%s', location, error.message, componentStackInfo);
       }
     }
   }
